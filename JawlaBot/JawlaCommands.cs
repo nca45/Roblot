@@ -40,10 +40,10 @@ namespace JawlaBot
         [Command("waitfortyping"), Description("Waits for a typing indicator.")]
         public async Task WaitForTyping(CommandContext ctx)
         {
-            // first retrieve the interactivity module from the client
+            
             var interactivity = ctx.Client.GetInteractivityModule();
 
-            // then wait for author's typing
+            
             await ctx.RespondAsync("type something");
             var chn = await interactivity.WaitForTypingChannelAsync(ctx.User, TimeSpan.FromSeconds(60));
             if (chn != null)
@@ -65,7 +65,7 @@ namespace JawlaBot
             var interactivity = ctx.Client.GetInteractivityModule();
             var poll_options = options.Select(xe => xe.ToString());
 
-            // then let's present the poll
+            // present the poll
             var embed = new DiscordEmbedBuilder
             {
                 Title = "Poll time!",
@@ -73,16 +73,16 @@ namespace JawlaBot
             };
             var msg = await ctx.RespondAsync(embed: embed);
 
-            // add the options as reactions
+            // add reactions for users to vote
             for (var i = 0; i < options.Length; i++)
                 await msg.CreateReactionAsync(options[i]);
 
-            // collect and filter responses
+            // get all responses
             var poll_result = await interactivity.CollectReactionsAsync(msg, duration);
             var results = poll_result.Reactions.Where(xkvp => options.Contains(xkvp.Key))
                 .Select(xkvp => $"{xkvp.Key}: {xkvp.Value}");
 
-            // and finally post the results
+            // post results
             await ctx.RespondAsync(string.Join("\n", results));
         }
     }
