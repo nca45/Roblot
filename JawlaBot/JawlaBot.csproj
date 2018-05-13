@@ -12,4 +12,13 @@
     <PackageReference Include="DSharpPlus.VoiceNext" Version="3.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="libopus.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libsodium.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Entities;
+using DSharpPlus.VoiceNext;
 using Newtonsoft.Json;
 
 namespace JawlaBot
@@ -17,6 +19,10 @@ namespace JawlaBot
 
         static InteractivityModule interactivity;
 
+        static VoiceNextClient voice;
+
+        public static Cooldown cooldown = new Cooldown();
+
 
         static void Main(string[] args)
         {
@@ -25,7 +31,6 @@ namespace JawlaBot
 
         static async Task MainAsync(string[] arg)
         {
-
             var json = "";
             using (var fs = File.OpenRead("config.json"))
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
@@ -58,11 +63,47 @@ namespace JawlaBot
                 Timeout = TimeSpan.FromMinutes(5)
             });
 
+            voice = discord.UseVoiceNext();
             discord.MessageCreated += async e =>
             {
-                if (e.Message.Content.ToLower().EndsWith("xd")) 
+                if (e.Message.Content.ToLower().Replace(" ", String.Empty).Equals("canigetahooyah")) 
                 {
-                    await e.Message.RespondAsync("😠 There will be no 'xd's on my channel.");
+                    var rnd = new Random();
+                    var nxt = rnd.Next(0, 10);
+                    switch (nxt)
+                    {
+                        case 0:
+                            await e.Message.RespondAsync("Not happening bud.");
+                            return;
+                        case 1:
+                        case 2:
+                            await e.Message.RespondAsync("HOOYAH");
+                            return;
+                        case 3:
+                        case 4:
+                        case 5:
+                            await e.Message.RespondAsync("***HOOYAH***");
+                            return;
+                        case 6:
+                        case 7:
+                            await e.Message.RespondAsync("```HOOYAH```");
+                            return;
+                        case 8:
+                        case 9:
+                            await e.Message.RespondAsync(":regional_indicator_h: :regional_indicator_o:  :regional_indicator_o:  :regional_indicator_y:  :regional_indicator_a:  :regional_indicator_h:");
+                            return;
+                    }
+
+                }
+            };
+
+            discord.MessageCreated += async e => //check the cooldown
+            {
+                if(e.Author.IsBot == false)
+                {
+                    var test = cooldown.CheckCoolDown(e);
+                    await e.Message.RespondAsync($"update cooldown here {test}");
+                     
                 }
             };
 
