@@ -20,8 +20,18 @@ namespace JawlaBot
         [Command("test")]
         public async Task TestCommand(CommandContext ctx)
         {
-            await ctx.TriggerTypingAsync();
-            await ctx.RespondAsync($"This test is successful! {Program.cooldown.cooldownTime}");
+            var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
+            if (testBool)
+            {
+                await ctx.TriggerTypingAsync();
+                await ctx.RespondAsync($"This test is successful! {ctx.Message.Content.ToString()}");
+
+                Program.cooldown.startCooldown(DateTime.Now);
+            }
+            else
+            {
+                await ctx.RespondAsync("You're on cooldown, wait a moment!");
+            }
         }
 
         [Command("hooyah")] //this command is not needed anymore? Already in program.cs
@@ -51,8 +61,6 @@ namespace JawlaBot
 
             // let's make the message a bit more colourful
             var emoji = DiscordEmoji.FromName(ctx.Client, ":wave:");
-
-            Program.cooldown.cooldownTime += 1; //TESTING
 
             // and finally, let's respond and greet the user.
             await ctx.RespondAsync($"{emoji} Hello, {member.Mention}!");
@@ -141,35 +149,44 @@ namespace JawlaBot
         [Command("yeahboi")]
         public async Task YeahBoy(CommandContext ctx)
         {
-            await Join(ctx);
-
-            var vnc = ctx.Client.GetVoiceNextClient().GetConnection(ctx.Guild);
-            await vnc.SendSpeakingAsync(true);
-            string file = @"C:\temp\yeahboi.mp3";
-            var psi = new ProcessStartInfo
+            var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
+            if (testBool)
             {
-                FileName = @"C:\Users\Naysan\Source\Repos\JawlaBot\JawlaBot\ffmpeg.exe",
-                Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            };
+                await Join(ctx);
 
-            var ffmpeg = Process.Start(psi);
-            var ffout = ffmpeg.StandardOutput.BaseStream;
+                var vnc = ctx.Client.GetVoiceNextClient().GetConnection(ctx.Guild);
+                await vnc.SendSpeakingAsync(true);
+                string file = @"C:\temp\yeahboi.mp3";
+                var psi = new ProcessStartInfo
+                {
+                    FileName = @"C:\Users\Naysan\Source\Repos\JawlaBot\JawlaBot\ffmpeg.exe",
+                    Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
 
-            var buff = new byte[3840];
-            var br = 0;
-            while ((br = ffout.Read(buff, 0, buff.Length)) > 0)
-            {
-                if (br < buff.Length) //not a full sample, mute the rest
-                    for (var i = br; i< buff.Length; i++)
-                    {
-                        buff[i] = 0;
-                    }
-                await vnc.SendAsync(buff, 20);
+                var ffmpeg = Process.Start(psi);
+                var ffout = ffmpeg.StandardOutput.BaseStream;
+
+                var buff = new byte[3840];
+                var br = 0;
+                while ((br = ffout.Read(buff, 0, buff.Length)) > 0)
+                {
+                    if (br < buff.Length) //not a full sample, mute the rest
+                        for (var i = br; i< buff.Length; i++)
+                        {
+                            buff[i] = 0;
+                        }
+                    await vnc.SendAsync(buff, 20);
+                }
+                await vnc.SendSpeakingAsync(false);
+                await Leave(ctx); //leave right after the command is done
+                Program.cooldown.startCooldown(DateTime.Now); //start the cooldown now
             }
-            await vnc.SendSpeakingAsync(false);
-            await Leave(ctx); //leave right after the command is done
+            else
+            {
+                await ctx.RespondAsync("You're on cooldown, wait a moment!");
+            }
         }
     }
 }

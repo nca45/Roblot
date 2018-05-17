@@ -97,15 +97,15 @@ namespace JawlaBot
                 }
             };
 
-            discord.MessageCreated += async e => //check the cooldown
-            {
-                if(e.Author.IsBot == false)
-                {
-                    var test = cooldown.CheckCoolDown(e);
-                    await e.Message.RespondAsync($"update cooldown here {test}");
-                     
-                }
-            };
+            //discord.MessageCreated += async e => //check the cooldown
+            //{
+            //    if (e.Author.IsBot == false)
+            //    {
+            //        var test = e.Message.Timestamp.Second - 2;
+            //        await e.Message.RespondAsync($"update cooldown here {test}");
+
+            //    }
+            //};
 
             await discord.ConnectAsync();
             await Task.Delay(-1);
