@@ -11,12 +11,30 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
+using MongoDB.Driver.Core;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Newtonsoft.Json;
+using JawlaBot.JSON_Classes;
 
 namespace JawlaBot
 {
     class JawlaCommands
     {
 
+        [Command("testOwe")] // testing for IOwe - for debugging it will owe a fake person
+        public async Task testOwe(CommandContext ctx)
+        {
+            User user = new User();
+            user.name = ctx.User.Username.ToString();
+            string id = ctx.User.Id.ToString();
+            user.id = id;
+            string output = JsonConvert.SerializeObject(user);
+            BsonDocument document = BsonDocument.Parse(output);
+            dbConnect.dbInsert(id, document);
+            await ctx.RespondAsync("Successfully inserted doc into collection");
+ 
+        }
         [Command("test")]
         public async Task TestCommand(CommandContext ctx)
         {

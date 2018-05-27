@@ -7,7 +7,11 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
+using MongoDB.Driver.Core;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Newtonsoft.Json;
+using JawlaBot.JSON_Classes;
 
 namespace JawlaBot
 {
@@ -23,9 +27,12 @@ namespace JawlaBot
 
         public static Cooldown cooldown = new Cooldown();
 
+        public static MongoClient client = null;
+        
 
         static void Main(string[] args)
         {
+
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -36,6 +43,7 @@ namespace JawlaBot
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 json = await sr.ReadToEndAsync();
 
+ 
             var cfgjson = JsonConvert.DeserializeObject<ConfigJson>(json);
 
             discord = new DiscordClient(new DiscordConfiguration
