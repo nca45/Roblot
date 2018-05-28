@@ -7,31 +7,126 @@ using MongoDB.Bson;
 using Newtonsoft.Json;
 using JawlaBot.JSON_Classes;
 
+
 namespace JawlaBot
 {
     class dbConnect
     {
-        public static async void dbInsert(string id, BsonDocument doc)
+
+        static private IMongoDatabase database = Program.client.GetDatabase("jawlamoney");
+        static private IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("users");
+
+        private static void checkConnection()
         {
-            //check if we are already connected or not
             if (Program.client == null)
             {
                 Console.WriteLine("we have not connected to the database yet - now connecting");
-                Program.client = new MongoClient("mongodb://username:pass@ds235860.mlab.com:35860/jawlamoney");
+                Program.client = new MongoClient("mongodb://user:pass@ds235860.mlab.com:35860/jawlamoney");
 
             }
             else
             {
                 Console.WriteLine("already connected to the database");
             }
-            var database = Program.client.GetDatabase("jawlamoney");
-
-            var collection = database.GetCollection<BsonDocument>("users");
+        }
+        private static async void dbInsert(string id, BsonDocument doc)
+        {
 
             await collection.ReplaceOneAsync(
                 filter: new BsonDocument("id", id),
                 options: new UpdateOptions { IsUpsert = true },
                 replacement: doc);
+        }
+        public static void userExists(string id, string name)
+        {
+            checkConnection();
+
+            var query = Builders<BsonDocument>.Filter.Eq("id", id);
+            bool result = collection.Find(query).Limit(1).Any(); //this checks for existance
+            if (!result)
+            {
+                Console.WriteLine("creating a document for this user");
+
+                User user = new User();
+                user.name = name;
+                user.id = id;
+                string output = JsonConvert.SerializeObject(user);
+                BsonDocument entry = BsonDocument.Parse(output);
+                dbInsert(id, entry);
+            }
+            else
+            {
+                Console.WriteLine("This user exists as a document");
+            }
+            //return result;
+        }
+        public static async void userOwes(string payerId, string payeeId, string payeeName, double amount)
+        {
+            //grab the payer's document
+            var query = Builders<BsonDocument>.Filter.Eq("id", payerId);
+
+            var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
+
+            User payer = JsonConvert.DeserializeObject<User>(result.ToString());
+
+            //update the 'oweme' part - check if there is an array already, if so update, if not, create
+            bool payeeExists = false;
+
+            for(int i=0; i<payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
+            {
+                if(payer.IOwe[i].name == payeeName)
+                {
+                    payer.IOwe[i].amount += Math.Round(amount,2);
+                    payeeExists = true;
+                }
+            }
+            //create the money and person if the payee doesn't yet exist
+            if (!payeeExists)
+            {
+                IOwe payee = new IOwe();
+                payee.name = payeeName;
+                payee.amount = Math.Round(amount,2);
+                payer.IOwe.Add(payee);
+            }
+
+            //update the user document and insert
+            string output = JsonConvert.SerializeObject(payer);
+
+            BsonDocument entry = BsonDocument.Parse(output);
+
+            dbInsert(payerId, entry);
+        }
+        public static async void userIsOwed(string userOwedId, string userPayingId, string userPayingName, double amount)
+        {
+            var query = Builders<BsonDocument>.Filter.Eq("id", userOwedId);
+
+            var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
+
+            User userBeingPaid = JsonConvert.DeserializeObject<User>(result.ToString());
+
+            bool payerExists = false;
+
+            for(int i=0; i < userBeingPaid.owesMe.Count; i++)
+            {
+                if(userBeingPaid.owesMe[i].name == userPayingName)
+                {
+                    userBeingPaid.owesMe[i].amount += Math.Round(amount, 2);
+                    payerExists = true;
+                }
+            }
+            if (!payerExists)
+            {
+                OwesMe payer = new OwesMe();
+                payer.name = userPayingName;
+                payer.amount = Math.Round(amount, 2);
+                userBeingPaid.owesMe.Add(payer);
+            }
+
+            string output = JsonConvert.SerializeObject(userBeingPaid);
+
+            BsonDocument entry = BsonDocument.Parse(output);
+
+            dbInsert(userOwedId, entry);
         }
     }
 }

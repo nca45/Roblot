@@ -22,23 +22,50 @@ namespace JawlaBot
     class JawlaCommands
     {
 
-        [Command("testOwe")] // testing for IOwe - for debugging it will owe a fake person
-        public async Task testOwe(CommandContext ctx)
+        [Command("iowe")] // testing for IOwe - for debugging it will owe a fake person
+        public async Task testOwe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
         {
-            User user = new User();
-            user.name = ctx.User.Username.ToString();
-            string id = ctx.User.Id.ToString();
-            user.id = id;
-            string output = JsonConvert.SerializeObject(user);
-            BsonDocument document = BsonDocument.Parse(output);
-            dbConnect.dbInsert(id, document);
-            await ctx.RespondAsync("Successfully inserted doc into collection");
+
+            if(ctx.Member.Username == member.Username)
+            {
+                await ctx.RespondAsync("You owe yourself money? :thinking:");
+            }
+            else if (member.IsBot)
+            {
+                await ctx.RespondAsync("You owe money to a bot? :thinking:");
+            }
+            else if(amount <= 0)
+            {
+                await ctx.RespondAsync("You can't owe someone $0 or less c'mon man.");
+            }
+            else
+            {
+               // await ctx.RespondAsync($"you called the member {member.Mention} with the amount of {amount}");
+
+                dbConnect.userExists(ctx.Member.Id.ToString(), ctx.Member.Username); //check if calling user already has a document, create it if not
+                dbConnect.userOwes(ctx.Member.Id.ToString(), member.Id.ToString(), member.Username, amount);
+
+                //then update the payee
+
+                dbConnect.userExists(member.Id.ToString(), member.Username);
+                dbConnect.userIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), ctx.Member.Username, amount);
+
+                await ctx.RespondAsync($"{member.Mention}, {ctx.Member.Nickname} has added ${amount} to the amount they owe you.");
+
+            }
+            //TODO: Add arguments of username and amount owed - DONE
+            // add a poll or confirmation by the payee
+            // check if this user has a document, if not add it
+            // get the list of money owed and see if there is already a name in the list
+            // if yes, update the amount and update the document
+            // if no, create a new class/object, add it to the list and update the document.
  
         }
         [Command("test")]
-        public async Task TestCommand(CommandContext ctx)
+        public async Task TestCommand(CommandContext ctx, DiscordMember member)
         {
             var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
+            await ctx.RespondAsync(member.Mention);
             if (testBool)
             {
                 await ctx.TriggerTypingAsync();

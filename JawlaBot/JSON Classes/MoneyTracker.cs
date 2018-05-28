@@ -22,5 +22,11 @@ namespace JawlaBot.JSON_Classes
         public string id { get; set; }
         public List<OwesMe> owesMe { get; set; }
         public List<IOwe> IOwe { get; set; }
+
+        public User()
+        {
+            owesMe = new List<OwesMe>();
+            IOwe = new List<IOwe>();
+        }
     }
 }
