@@ -21,11 +21,10 @@ namespace JawlaBot
 {
     class JawlaCommands
     {
-
+        [Description("Records an amount of money the user owes to")]
         [Command("iowe")] // testing for IOwe - for debugging it will owe a fake person
-        public async Task testOwe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
+        public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
         {
-
             if(ctx.Member.Username == member.Username)
             {
                 await ctx.RespondAsync("You owe yourself money? :thinking:");
@@ -42,25 +41,89 @@ namespace JawlaBot
             {
                // await ctx.RespondAsync($"you called the member {member.Mention} with the amount of {amount}");
 
-                dbConnect.userExists(ctx.Member.Id.ToString(), ctx.Member.Username); //check if calling user already has a document, create it if not
-                dbConnect.userOwes(ctx.Member.Id.ToString(), member.Id.ToString(), member.Username, amount);
+                dbConnect.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
+                dbConnect.UserOwes(ctx.Member.Id.ToString(), member.Id.ToString(), amount);
 
                 //then update the payee
 
-                dbConnect.userExists(member.Id.ToString(), member.Username);
-                dbConnect.userIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), ctx.Member.Username, amount);
-
-                await ctx.RespondAsync($"{member.Mention}, {ctx.Member.Nickname} has added ${amount} to the amount they owe you.");
-
+                dbConnect.UserExists(member.Id.ToString());
+                dbConnect.UserIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), amount);
+                var username = (ctx.Member.Nickname == null) ? ctx.Member.Username : ctx.Member.Nickname;
+                // present the poll
+                var embed = new DiscordEmbedBuilder
+                {
+                    Title = $"{username} has added ${amount} to the amount they owe you."
+                };
+                var msg = await ctx.RespondAsync($"{member.Mention}", embed: embed);
             }
-            //TODO: Add arguments of username and amount owed - DONE
-            // add a poll or confirmation by the payee
-            // check if this user has a document, if not add it
-            // get the list of money owed and see if there is already a name in the list
-            // if yes, update the amount and update the document
-            // if no, create a new class/object, add it to the list and update the document.
- 
         }
+
+        [Command("oweme")]
+        [Description("Requests an amount of money from a user")]
+        public async Task Oweme(CommandContext ctx, DiscordMember user, double amount)
+        {
+            if (ctx.Member.Username == user.Username)
+            {
+                await ctx.RespondAsync("You owe yourself money? :thinking:");
+            }
+            else if (user.IsBot)
+            {
+                await ctx.RespondAsync("A bot owes you money? :thinking:");
+            }
+            else if (amount <= 0)
+            {
+                await ctx.RespondAsync("Someone can't owe you $0 or less c'mon man.");
+            }
+            else if(user.Presence == null)
+            {
+                await ctx.RespondAsync($"{user.Username} is offline right now!");
+            }
+            else
+            {
+                //get poll or confirmation by the person who is being requested
+                var pollDuration = TimeSpan.FromSeconds(30);
+                var interactivity = ctx.Client.GetInteractivityModule();
+
+                var confirmEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsup:");
+                var declineEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsdown:");
+                var requestingName = (ctx.Member.Nickname == null) ? ctx.Member.Username : ctx.Member.Nickname;
+                // present the poll
+                var embed = new DiscordEmbedBuilder
+                {
+                    Title = $"{requestingName} is requesting ${amount} from you. Is this amount correct?"
+                };
+                var msg = await ctx.RespondAsync($"{user.Mention}", embed: embed);
+
+                // add the options as reactions
+                await msg.CreateReactionAsync(confirmEmoji);
+                await msg.CreateReactionAsync(declineEmoji);
+                // get reactions
+                var poll_result = await interactivity.WaitForReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, user, pollDuration);
+                if(poll_result.Emoji.Name == confirmEmoji)
+                {
+                    await ctx.RespondAsync("Updating database...");
+                    dbConnect.UserExists(user.Id.ToString()); 
+                    dbConnect.UserOwes(user.Id.ToString(), ctx.Member.Id.ToString(), amount);
+
+                    dbConnect.UserExists(ctx.Member.Id.ToString());
+                    dbConnect.UserIsOwed(ctx.Member.Id.ToString(), user.Id.ToString(), amount);
+
+                    await ctx.RespondAsync("Confirmed!");
+                }
+                else
+                {
+                    await ctx.RespondAsync("Request Declined");
+                }
+            }
+        }
+        [Command("get")]
+        public async Task TestGet(CommandContext ctx)
+        {
+            var user = await ctx.Client.GetUserAsync(450549613854720010);
+            ctx.RespondAsync($"This user is {user.Mention}");
+            
+        }
+
         [Command("test")]
         public async Task TestCommand(CommandContext ctx, DiscordMember member)
         {

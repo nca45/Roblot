@@ -16,12 +16,12 @@ namespace JawlaBot
         static private IMongoDatabase database = Program.client.GetDatabase("jawlamoney");
         static private IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("users");
 
-        private static void checkConnection()
+        private static void CheckConnection()
         {
             if (Program.client == null)
             {
                 Console.WriteLine("we have not connected to the database yet - now connecting");
-                Program.client = new MongoClient("mongodb://user:pass@ds235860.mlab.com:35860/jawlamoney");
+                Program.client = new MongoClient("mongodb://nca45:showmethemoney@ds235860.mlab.com:35860/jawlamoney");
 
             }
             else
@@ -37,9 +37,9 @@ namespace JawlaBot
                 options: new UpdateOptions { IsUpsert = true },
                 replacement: doc);
         }
-        public static void userExists(string id, string name)
+        public static void UserExists(string id)
         {
-            checkConnection();
+            CheckConnection();
 
             var query = Builders<BsonDocument>.Filter.Eq("id", id);
             bool result = collection.Find(query).Limit(1).Any(); //this checks for existance
@@ -48,7 +48,6 @@ namespace JawlaBot
                 Console.WriteLine("creating a document for this user");
 
                 User user = new User();
-                user.name = name;
                 user.id = id;
                 string output = JsonConvert.SerializeObject(user);
                 BsonDocument entry = BsonDocument.Parse(output);
@@ -58,9 +57,8 @@ namespace JawlaBot
             {
                 Console.WriteLine("This user exists as a document");
             }
-            //return result;
         }
-        public static async void userOwes(string payerId, string payeeId, string payeeName, double amount)
+        public static async void UserOwes(string payerId, string payeeId, double amount)
         {
             //grab the payer's document
             var query = Builders<BsonDocument>.Filter.Eq("id", payerId);
@@ -74,7 +72,7 @@ namespace JawlaBot
 
             for(int i=0; i<payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
             {
-                if(payer.IOwe[i].name == payeeName)
+                if(payer.IOwe[i].id == payeeId)
                 {
                     payer.IOwe[i].amount += Math.Round(amount,2);
                     payeeExists = true;
@@ -84,7 +82,7 @@ namespace JawlaBot
             if (!payeeExists)
             {
                 IOwe payee = new IOwe();
-                payee.name = payeeName;
+                payee.id = payeeId;
                 payee.amount = Math.Round(amount,2);
                 payer.IOwe.Add(payee);
             }
@@ -96,7 +94,7 @@ namespace JawlaBot
 
             dbInsert(payerId, entry);
         }
-        public static async void userIsOwed(string userOwedId, string userPayingId, string userPayingName, double amount)
+        public static async void UserIsOwed(string userOwedId, string userPayingId, double amount)
         {
             var query = Builders<BsonDocument>.Filter.Eq("id", userOwedId);
 
@@ -108,7 +106,7 @@ namespace JawlaBot
 
             for(int i=0; i < userBeingPaid.owesMe.Count; i++)
             {
-                if(userBeingPaid.owesMe[i].name == userPayingName)
+                if(userBeingPaid.owesMe[i].id == userPayingId)
                 {
                     userBeingPaid.owesMe[i].amount += Math.Round(amount, 2);
                     payerExists = true;
@@ -117,7 +115,7 @@ namespace JawlaBot
             if (!payerExists)
             {
                 OwesMe payer = new OwesMe();
-                payer.name = userPayingName;
+                payer.id = userPayingId;
                 payer.amount = Math.Round(amount, 2);
                 userBeingPaid.owesMe.Add(payer);
             }
