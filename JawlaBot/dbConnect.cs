@@ -126,5 +126,28 @@ namespace JawlaBot
 
             dbInsert(userOwedId, entry);
         }
+        public static List<IOwe> WhoIowe(string userId)
+        {
+            UserExists(userId);
+            var query = Builders<BsonDocument>.Filter.Eq("id", userId);
+
+            var result = collection.Find(query).Project<BsonDocument>("{_id: 0, IOwe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
+
+            User usersIOwe = JsonConvert.DeserializeObject<User>(result.ToString());
+
+            return usersIOwe.IOwe;
+        }
+
+        public static List<OwesMe> WhoOwesMe(string userId)
+        {
+            UserExists(userId);
+            var query = Builders<BsonDocument>.Filter.Eq("id", userId);
+
+            var result = collection.Find(query).Project<BsonDocument>("{_id: 0, owesMe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
+
+            User usersThatOwe = JsonConvert.DeserializeObject<User>(result.ToString());
+
+            return usersThatOwe.owesMe;
+        }
     }
 }

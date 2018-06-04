@@ -21,6 +21,55 @@ namespace JawlaBot
 {
     class JawlaCommands
     {
+
+        [Description("Gives a record of which people the user owes and how much")]
+        [Command("whoiowe")]
+        public async Task WhoIOwe(CommandContext ctx)
+        {
+            List<IOwe> usersIOwe = dbConnect.WhoIowe(ctx.Member.Id.ToString());
+            int count = 0;
+            string finalString = "";
+            for(int i = 0; i < usersIOwe.Count; i++)
+            {
+                DiscordMember member = await ctx.Guild.GetMemberAsync(UInt64.Parse(usersIOwe[i].id));
+                if (usersIOwe[i].amount > 0)
+                {
+                    finalString += member.DisplayName + $": ${usersIOwe[i].amount} \n";
+                    count++;
+                }
+            }
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = (count == 1) ? "You currently owe 1 person" : $"You currently owe {count} people",
+                Description = finalString
+            };
+            await ctx.RespondAsync(embed:embed);
+        }
+
+        [Description("Gives a record of who owes the user and how much")]
+        [Command("whoowesme")]
+        public async Task WhoOwesMe(CommandContext ctx)
+        {
+            List<OwesMe> usersOweMe = dbConnect.WhoOwesMe(ctx.Member.Id.ToString());
+            int count = 0;
+            string finalString = "";
+            for (int i = 0; i < usersOweMe.Count; i++)
+            {
+                DiscordMember member = await ctx.Guild.GetMemberAsync(UInt64.Parse(usersOweMe[i].id));
+                if (usersOweMe[i].amount > 0)
+                {
+                    finalString += member.DisplayName + $": ${usersOweMe[i].amount} \n";
+                    count++;
+                }
+            }
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = (count == 1) ? "1 person currently owes you" : $"{count} people currently owe you",
+                Description = finalString
+            };
+            await ctx.RespondAsync(embed: embed);
+        }
+
         [Description("Records an amount of money the user owes to")]
         [Command("iowe")] // testing for IOwe - for debugging it will owe a fake person
         public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
@@ -48,11 +97,10 @@ namespace JawlaBot
 
                 dbConnect.UserExists(member.Id.ToString());
                 dbConnect.UserIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), amount);
-                var username = (ctx.Member.Nickname == null) ? ctx.Member.Username : ctx.Member.Nickname;
                 // present the poll
                 var embed = new DiscordEmbedBuilder
                 {
-                    Title = $"{username} has added ${amount} to the amount they owe you."
+                    Title = $"{ctx.Member.DisplayName} has added ${amount} to the amount they owe you."
                 };
                 var msg = await ctx.RespondAsync($"{member.Mention}", embed: embed);
             }
@@ -86,11 +134,10 @@ namespace JawlaBot
 
                 var confirmEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsup:");
                 var declineEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsdown:");
-                var requestingName = (ctx.Member.Nickname == null) ? ctx.Member.Username : ctx.Member.Nickname;
                 // present the poll
                 var embed = new DiscordEmbedBuilder
                 {
-                    Title = $"{requestingName} is requesting ${amount} from you. Is this amount correct?"
+                    Title = $"{ctx.Member.DisplayName} is requesting ${amount} from you. Is this amount correct?"
                 };
                 var msg = await ctx.RespondAsync($"{user.Mention}", embed: embed);
 
