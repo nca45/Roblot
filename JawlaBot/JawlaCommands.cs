@@ -109,17 +109,99 @@ namespace JawlaBot
         [Command("pay")]
         public async Task Pay(CommandContext ctx, DiscordMember payee, string amount)
         {
+            bool isNum = Double.TryParse(amount, out double amountToBePaid);
+
             //If user types in 'full', pay the amount in full whatever owed
             //else, subtract the amount from amount owed, so long as it's less than the amount owed
             //if it is more than the amount owed, send back an error
             //can't pay himself or a bot, also check 'amount' to make sure it is either a number or 'full'
-            if (amount == "full")
+            if (ctx.Member.Username == payee.Username)
             {
-                await ctx.RespondAsync("paid in full");
+                await ctx.RespondAsync("You can't pay yourself money!");
+            }
+            else if (payee.IsBot)
+            {
+                await ctx.RespondAsync("You can't pay a bot!");
+            }
+            else if (isNum && (amountToBePaid == 0 || amountToBePaid < 0))
+            {
+                await ctx.RespondAsync("Error: Amount paid cannot be less than or equal to 0");
+            }
+            else if (payee.Presence == null)
+            {
+                await ctx.RespondAsync($"{payee.DisplayName} is offline right now!");
+            }
+            else if(!isNum && amount != "full")
+            {
+                await ctx.RespondAsync("Error: Invalid amount");
             }
             else
             {
-                await ctx.RespondAsync($"paid ${amount}");
+                double amountOwed = 0;
+                List<IOwe> usersIOwe = dbConnect.WhoIowe(ctx.Member.Id.ToString());
+                bool userFound = false;
+                int count = 0;
+
+                while (!userFound && count < usersIOwe.Count)
+                {
+                    if (payee.Id.ToString() == usersIOwe[count].id && usersIOwe[count].amount > 0)
+                    {
+                        amountOwed = usersIOwe[count].amount;
+                        userFound = true;
+                    }
+                    count++;
+                }
+
+                if (!userFound)
+                {
+                    await ctx.RespondAsync($"I can't find {payee.DisplayName} in the list of people you owe");
+                }
+
+                else
+                {
+                    if (amountToBePaid > amountOwed)
+                    {
+                        await ctx.RespondAsync("Error: Amount to be paid exceeds the amount you owe. Try using ```!pay (name) full``` if you wish to pay the full amount.");
+                    }
+                    else
+                    {
+                        amountToBePaid = (amount == "full") ? amountOwed : amountToBePaid;
+
+                        var pollDuration = TimeSpan.FromSeconds(30);
+                        var interactivity = ctx.Client.GetInteractivityModule();
+
+                        var confirmEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsup:");
+                        var declineEmoji = DiscordEmoji.FromName(ctx.Client, ":thumbsdown:");
+                        // present the poll
+                        var embed = new DiscordEmbedBuilder
+                        {
+                            Title = $"{ctx.Member.DisplayName} is requesting to pay you ${amountToBePaid}. Is this amount correct?"
+                        };
+                        var msg = await ctx.RespondAsync($"{payee.Mention}", embed: embed);
+
+                        // add the options as reactions
+                        await msg.CreateReactionAsync(confirmEmoji);
+                        await msg.CreateReactionAsync(declineEmoji);
+                        // get reactions
+                        var poll_result = await interactivity.WaitForMessageReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, msg, payee, pollDuration); //wait for reaction on this particular message
+
+                        if (poll_result != null && poll_result.Emoji.Name == confirmEmoji)
+                        {
+                            await ctx.RespondAsync("Updating database...");
+
+                            dbConnect.UserOwes(ctx.Member.Id.ToString(), payee.Id.ToString(), amountToBePaid*(-1));
+
+                            dbConnect.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid*(-1));
+
+                            await ctx.RespondAsync("Payment Confirmed!");
+                        }
+                        else
+                        {
+                            await ctx.RespondAsync("Request Declined");
+                        }
+
+                    }
+                }
             }
         }
         [Command("owesme")]
@@ -140,7 +222,7 @@ namespace JawlaBot
             }
             else if(user.Presence == null)
             {
-                await ctx.RespondAsync($"{user.Username} is offline right now!");
+                await ctx.RespondAsync($"{user.DisplayName} is offline right now!");
             }
             else
             {
