@@ -105,8 +105,24 @@ namespace JawlaBot
                 var msg = await ctx.RespondAsync($"{member.Mention}", embed: embed);
             }
         }
-
-        [Command("oweme")]
+        [Description("Pays the user x amount of money if owed")]
+        [Command("pay")]
+        public async Task Pay(CommandContext ctx, DiscordMember payee, string amount)
+        {
+            //If user types in 'full', pay the amount in full whatever owed
+            //else, subtract the amount from amount owed, so long as it's less than the amount owed
+            //if it is more than the amount owed, send back an error
+            //can't pay himself or a bot, also check 'amount' to make sure it is either a number or 'full'
+            if (amount == "full")
+            {
+                await ctx.RespondAsync("paid in full");
+            }
+            else
+            {
+                await ctx.RespondAsync($"paid ${amount}");
+            }
+        }
+        [Command("owesme")]
         [Description("Requests an amount of money from a user")]
         public async Task Oweme(CommandContext ctx, DiscordMember user, double amount)
         {
@@ -145,8 +161,9 @@ namespace JawlaBot
                 await msg.CreateReactionAsync(confirmEmoji);
                 await msg.CreateReactionAsync(declineEmoji);
                 // get reactions
-                var poll_result = await interactivity.WaitForReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, user, pollDuration);
-                if(poll_result.Emoji.Name == confirmEmoji)
+                var poll_result = await interactivity.WaitForMessageReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, msg, user, pollDuration); //wait for reaction on this particular message
+
+                if(poll_result != null && poll_result.Emoji.Name == confirmEmoji)
                 {
                     await ctx.RespondAsync("Updating database...");
                     dbConnect.UserExists(user.Id.ToString()); 
@@ -162,13 +179,6 @@ namespace JawlaBot
                     await ctx.RespondAsync("Request Declined");
                 }
             }
-        }
-        [Command("get")]
-        public async Task TestGet(CommandContext ctx)
-        {
-            var user = await ctx.Client.GetUserAsync(450549613854720010);
-            ctx.RespondAsync($"This user is {user.Mention}");
-            
         }
 
         [Command("test")]
@@ -268,37 +278,6 @@ namespace JawlaBot
 
             vnc.Disconnect();
             await ctx.RespondAsync($"Leaving Channel {ctx.Channel.Name}");
-        }
-
-        [Command("votePoints"), Description("Run a poll with reactions.")]
-        public async Task Poll(CommandContext ctx, [Description("Who should be subjected to this poll?")] DiscordMember member)
-        {
-           
-            var pollDuration = TimeSpan.FromSeconds(30);
-            var interactivity = ctx.Client.GetInteractivityModule();
-
-            // present the poll
-            var embed = new DiscordEmbedBuilder
-            {
-                Title = $"Poll time! Vote to change {member.DisplayName}'s ranking"
-            };
-            var msg = await ctx.RespondAsync(embed: embed);
-
-            // add the options as reactions
-            await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
-            await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
-            // get reactions
-            var poll_result = await interactivity.CollectReactionsAsync(msg, pollDuration);
-            await ctx.RespondAsync("The results are in!");
-
-            //TODO: Grab the reaction numbers from thumbs up and thumbs down and see which ones is higher
-
-            //var results = poll_result.Reactions.Where(xkvp => options.Contains(xkvp.Key))
-            //    .Select(xkvp => $"{xkvp.Key}: {xkvp.Value}");
-
-            // post results
-            //await ctx.RespondAsync(string.Join("\n", results));
-            await ctx.RespondAsync("done with this command");
         }
 
         [Command("yeahboi")]
