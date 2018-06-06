@@ -76,7 +76,7 @@ namespace JawlaBot
         }
 
         [Description("Records an amount of money the user owes to")]
-        [Command("iowe")] // testing for IOwe - for debugging it will owe a fake person
+        [Command("iowe")] 
         public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
         {
             if (ctx.Member.Username == member.Username)
@@ -255,14 +255,6 @@ namespace JawlaBot
             }
         }
 
-        [Command("greet")]
-        public async Task Greet(CommandContext ctx, [Description("The user to say hi to.")] DiscordMember member) // this command takes a member as an argument; you can pass one by username, nickname, id, or mention
-        {
-            await ctx.TriggerTypingAsync();
-            var emoji = DiscordEmoji.FromName(ctx.Client, ":wave:");
-            await ctx.RespondAsync($"{emoji} Hello, {member.Mention}!");
-        }
-
         [Command("pubgdrop")]
         [Aliases("drop")]
         public async Task List(CommandContext ctx, string map)
@@ -306,8 +298,7 @@ namespace JawlaBot
             await ctx.RespondAsync($"Let's go eat at {Lists.Restaurants()}.");
         }
 
-        [Command("join")]
-        public async Task Join(CommandContext ctx)
+        private async Task Join(CommandContext ctx)
         {
             var vnext = ctx.Client.GetVoiceNextClient();
             var vnc = vnext.GetConnection(ctx.Guild);
@@ -323,8 +314,7 @@ namespace JawlaBot
             await ctx.RespondAsync($"Joining Channel {ctx.Channel.Name}");
         }
 
-        [Command("leave")]
-        public async Task Leave(CommandContext ctx)
+        private async Task Leave(CommandContext ctx)
         {
             var vnext = ctx.Client.GetVoiceNextClient();
             var vnc = vnext.GetConnection(ctx.Guild);
@@ -392,7 +382,7 @@ namespace JawlaBot
         }
 
         [Command("pranked")]
-        [Aliases("frankprank", "prank")]
+        [Aliases("frankprank", "prank", "gotem")]
         public async Task Pranked(CommandContext ctx)
         {
             Random rnd = new Random();
