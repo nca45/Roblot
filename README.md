@@ -29,7 +29,11 @@ Updates the database to reflect that you owe `<name>` $`<amount>`.
 
 ### `!owesme <name> <amount>`
 
-Requests `<name>` to update the database to reflect that they owe you $`<amount>`. `<name>` will get a notification by the bot to confirm if the `<amount>` is correct.
+Requests `<name>` to update the database to reflect that they owe you $`<amount>`. 
+
+`<name>` will get a notification by the bot to confirm if the `<amount>` is correct.
+
+This command will only work if the user `<name>` is online.
 
 ### `!whoiowe`
 
@@ -44,6 +48,8 @@ Gets a list of users who owes you money.
 Pays the user `<name>` $`<amount>`. This command will only work if `<name>` is on your list of people you owe.
 
 You can also substitute `<amount>` for the word `full`, which will pay the amount in full, or the exact amount you owe to `<name>`.
+
+This command will only work if the user `<name>` is online.
 
 ## Jawla Functions: As proprietary as things come.
 
