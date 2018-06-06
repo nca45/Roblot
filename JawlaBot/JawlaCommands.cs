@@ -29,7 +29,7 @@ namespace JawlaBot
             List<IOwe> usersIOwe = dbConnect.WhoIowe(ctx.Member.Id.ToString());
             int count = 0;
             string finalString = "";
-            for(int i = 0; i < usersIOwe.Count; i++)
+            for (int i = 0; i < usersIOwe.Count; i++)
             {
                 DiscordMember member = await ctx.Guild.GetMemberAsync(UInt64.Parse(usersIOwe[i].id));
                 if (usersIOwe[i].amount > 0)
@@ -43,7 +43,7 @@ namespace JawlaBot
                 Title = (count == 1) ? "You currently owe 1 person" : $"You currently owe {count} people",
                 Description = finalString
             };
-            await ctx.RespondAsync(embed:embed);
+            await ctx.RespondAsync(embed: embed);
         }
 
         [Description("Gives a record of who owes the user and how much")]
@@ -74,7 +74,7 @@ namespace JawlaBot
         [Command("iowe")] // testing for IOwe - for debugging it will owe a fake person
         public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
         {
-            if(ctx.Member.Username == member.Username)
+            if (ctx.Member.Username == member.Username)
             {
                 await ctx.RespondAsync("You owe yourself money? :thinking:");
             }
@@ -82,13 +82,13 @@ namespace JawlaBot
             {
                 await ctx.RespondAsync("You owe money to a bot? :thinking:");
             }
-            else if(amount <= 0)
+            else if (amount <= 0)
             {
                 await ctx.RespondAsync("You can't owe someone $0 or less c'mon man.");
             }
             else
             {
-               // await ctx.RespondAsync($"you called the member {member.Mention} with the amount of {amount}");
+                // await ctx.RespondAsync($"you called the member {member.Mention} with the amount of {amount}");
 
                 dbConnect.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
                 dbConnect.UserOwes(ctx.Member.Id.ToString(), member.Id.ToString(), amount);
@@ -131,7 +131,7 @@ namespace JawlaBot
             {
                 await ctx.RespondAsync($"{payee.DisplayName} is offline right now!");
             }
-            else if(!isNum && amount != "full")
+            else if (!isNum && amount != "full")
             {
                 await ctx.RespondAsync("Error: Invalid amount");
             }
@@ -187,11 +187,9 @@ namespace JawlaBot
 
                         if (poll_result != null && poll_result.Emoji.Name == confirmEmoji)
                         {
-                            await ctx.RespondAsync("Updating database...");
+                            dbConnect.UserOwes(ctx.Member.Id.ToString(), payee.Id.ToString(), amountToBePaid * (-1));
 
-                            dbConnect.UserOwes(ctx.Member.Id.ToString(), payee.Id.ToString(), amountToBePaid*(-1));
-
-                            dbConnect.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid*(-1));
+                            dbConnect.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid * (-1));
 
                             await ctx.RespondAsync("Payment Confirmed!");
                         }
@@ -220,7 +218,7 @@ namespace JawlaBot
             {
                 await ctx.RespondAsync("Someone can't owe you $0 or less c'mon man.");
             }
-            else if(user.Presence == null)
+            else if (user.Presence == null)
             {
                 await ctx.RespondAsync($"{user.DisplayName} is offline right now!");
             }
@@ -245,10 +243,9 @@ namespace JawlaBot
                 // get reactions
                 var poll_result = await interactivity.WaitForMessageReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, msg, user, pollDuration); //wait for reaction on this particular message
 
-                if(poll_result != null && poll_result.Emoji.Name == confirmEmoji)
+                if (poll_result != null && poll_result.Emoji.Name == confirmEmoji)
                 {
-                    await ctx.RespondAsync("Updating database...");
-                    dbConnect.UserExists(user.Id.ToString()); 
+                    dbConnect.UserExists(user.Id.ToString());
                     dbConnect.UserOwes(user.Id.ToString(), ctx.Member.Id.ToString(), amount);
 
                     dbConnect.UserExists(ctx.Member.Id.ToString());
@@ -263,42 +260,6 @@ namespace JawlaBot
             }
         }
 
-        [Command("test")]
-        public async Task TestCommand(CommandContext ctx, DiscordMember member)
-        {
-            var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
-            await ctx.RespondAsync(member.Mention);
-            if (testBool)
-            {
-                await ctx.TriggerTypingAsync();
-                await ctx.RespondAsync($"This test is successful! {ctx.Message.Content.ToString()}");
-
-                Program.cooldown.startCooldown(DateTime.Now);
-            }
-            else
-            {
-                await ctx.RespondAsync("You're on cooldown, wait a moment!");
-            }
-        }
-
-        [Command("hooyah")] //this command is not needed anymore? Already in program.cs
-        public async Task HooyahAsync(CommandContext ctx)
-        {
-            var interactivity = ctx.Client.GetInteractivityModule();
-            var text = "test";
-            await ctx.RespondAsync("Respond with 'test' to recieve a reaction!");
-
-            var msg = await interactivity.WaitForMessageAsync(xm => xm.Content.Contains(text) && xm.Author.IsBot == false, TimeSpan.FromSeconds(15));
-            if(msg != null)
-            {
-                var email = msg.User.Mention;
-                await ctx.RespondAsync($"{email} has typed 'test!'");
-            }
-            else
-            {
-                await ctx.RespondAsync("Nobody typed 'test' :( I sad");
-            }
-        }
         [Command("greet")]
         public async Task Greet(CommandContext ctx, [Description("The user to say hi to.")] DiscordMember member) // this command takes a member as an argument; you can pass one by username, nickname, id, or mention
         {
@@ -312,26 +273,50 @@ namespace JawlaBot
             // and finally, let's respond and greet the user.
             await ctx.RespondAsync($"{emoji} Hello, {member.Mention}!");
         }
-        [Command("waitfortyping"), Description("Waits for a typing indicator.")] //might not need this, just for testing
-        public async Task WaitForTyping(CommandContext ctx)
-        {
-            // first retrieve the interactivity module from the client
-            var interactivity = ctx.Client.GetInteractivityModule();
 
-            // then wait for author's typing
-            await ctx.RespondAsync("type something");
-            var chn = await interactivity.WaitForTypingChannelAsync(ctx.User, TimeSpan.FromSeconds(60));
-            if (chn != null)
+        [Command("pubgdrop")]
+        [Aliases("drop")]
+        public async Task List(CommandContext ctx, string map)
+        {
+            string location = "";
+
+            if (map.ToLower() == "erangel" || map.ToLower() == "forest")
             {
-                // got 'em
-                await ctx.TriggerTypingAsync();
-                await ctx.RespondAsync($"{ctx.User.Mention}, you typed in {chn.Channel.Mention}!");
+                location = Lists.PUBGDrops("Erangel");
             }
-            else
+            if (map.ToLower() == "miramar" || map.ToLower() == "desert")
             {
-                await ctx.RespondAsync("*yawn*");
+                location = Lists.PUBGDrops("Miramar");
             }
+            await ctx.RespondAsync((location == "") ? ("That's not a valid map!") : ($"You should drop at {location}!"));
         }
+        [Command("listrestaurants")]
+        [Aliases("listeats")]
+        public async Task ListRestaurants(CommandContext ctx)
+        {
+            string finalList = "";
+            string[] restaurants = Lists.ListRestaurants();
+            for (int i = 0; i < restaurants.Length; i++)
+            {
+                finalList += restaurants[i] + "\n";
+            }
+
+            var embed = new DiscordEmbedBuilder()
+            {
+                Title = "Here's the current list of restaurants I have",
+                Description = finalList
+            };
+
+            await ctx.RespondAsync(embed: embed);
+        }
+
+        [Command("pickrestaurant")]
+        [Aliases("imhungry", "eats", "pickfood", "dinner")]
+        public async Task PickRestaurant(CommandContext ctx)
+        {
+            await ctx.RespondAsync($"Let's go eat at {Lists.Restaurants()}.");
+        }
+
         [Command("join")]
         public async Task Join(CommandContext ctx)
         {
@@ -362,17 +347,16 @@ namespace JawlaBot
             await ctx.RespondAsync($"Leaving Channel {ctx.Channel.Name}");
         }
 
-        [Command("yeahboi")]
-        public async Task YeahBoy(CommandContext ctx)
+
+        private async Task StreamAudio(CommandContext ctx, string audiofile)
         {
             var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
             if (testBool)
             {
                 await Join(ctx);
-
                 var vnc = ctx.Client.GetVoiceNextClient().GetConnection(ctx.Guild);
                 await vnc.SendSpeakingAsync(true);
-                string file = @"C:\temp\yeahboi.mp3";
+                string file = $@"C:\temp\{audiofile}.mp3";
                 var psi = new ProcessStartInfo
                 {
                     FileName = @"C:\Users\Naysan\Source\Repos\JawlaBot\JawlaBot\ffmpeg.exe",
@@ -389,7 +373,7 @@ namespace JawlaBot
                 while ((br = ffout.Read(buff, 0, buff.Length)) > 0)
                 {
                     if (br < buff.Length) //not a full sample, mute the rest
-                        for (var i = br; i< buff.Length; i++)
+                        for (var i = br; i < buff.Length; i++)
                         {
                             buff[i] = 0;
                         }
@@ -402,6 +386,82 @@ namespace JawlaBot
             else
             {
                 await ctx.RespondAsync("You're on cooldown, wait a moment!");
+            }
+        }
+        [Command("yeahboi")]
+        public async Task LongestYeahBoi(CommandContext ctx)
+        {
+            await StreamAudio(ctx, "yeahboi.mp3");
+        }
+
+        [Command("stop")]
+        [Aliases("timetostop", "frankstop", "itstimetostop", "notokay")]
+        public async Task TimetoStop(CommandContext ctx)
+        {
+            Random rnd = new Random();
+            await StreamAudio(ctx, $@"frankstop\frankstop{rnd.Next(5).ToString()}");
+        }
+
+        [Command("pranked")]
+        [Aliases("frankprank", "prank")]
+        public async Task Pranked(CommandContext ctx)
+        {
+            Random rnd = new Random();
+            await StreamAudio(ctx, $@"frankprank\frankprank{rnd.Next(9).ToString()}");
+        }
+
+        [Command("frank")]
+        [Aliases("filthyfrank")]
+        public async Task Frank(CommandContext ctx)
+        {
+            Random rnd = new Random();
+            await StreamAudio(ctx, $@"frank\frank{rnd.Next(3).ToString()}");
+        }
+
+        //some copy pasta memes
+        [Group("memes", CanInvokeWithoutSubcommand = true)] // this makes the class a group, but with a twist; the class now needs an ExecuteGroupAsync method
+        [Aliases("copypasta")]
+        public class ExampleExecutableGroup
+        {
+            public async Task ExecuteGroupAsync(CommandContext ctx) //no subcommandd will execute this method automatically
+            {
+                // let's give them a random meme
+                var rnd = new Random();
+                var nxt = rnd.Next(0, 2);
+
+                switch (nxt)
+                {
+                    case 0:
+                        await Despacito(ctx);
+                        return;
+
+                    case 1:
+                        await Fortnite(ctx);
+                        return;
+
+                    case 2:
+                        await RickandMorty(ctx);
+                        return;
+                }
+            }
+            [Command("Despactio")]
+            public async Task Despacito(CommandContext ctx)
+            {
+                await ctx.TriggerTypingAsync();
+
+                await ctx.RespondAsync("So today in Spanish class, my teacher told us that we would be listening to a song in Spanish. Already, I began to tremble. I had a bad feeling about this. “Which one?” I ask shakily, not wanting to hear the answer. “Despacito” She responds. I begin to hyperventilate. My worst fears have been realized. I fade in and out of conciseness. I clamp my palms over my ears, but I know it’s futile. The song plays. I’m crying now, praying. God, Allah, Buddha please help me. I curl up on the floor. There’s nothing I can do now. And then it happens. The chorus plays. The girls in my class open their mouths. The screams of the damned, the shrieks of the tortured fill my ears and bounce around my skull. My eardrums rupture, blood leaking out. I try to scream, but no sound comes out. I can only sit there, violently shaking as it happens to me. After what seems like hours, it’s finally over. I try to move, but I cannot make myself. My brain shuts down as my vision fades to black. I muster the last of my energy, uttering the accursed word. \n“Despacito”");
+            }
+            [Command("Fortnite")]
+            public async Task Fortnite(CommandContext ctx)
+            {
+                await ctx.TriggerTypingAsync();
+                await ctx.RespondAsync("```Fortnite takes place in the same universe as The Powerpuff Girls. Now, before you start ranting, hear me out. Fortnite has Thanos in it. Thanos is in Marvel Vs. Capcom Infinite. Mega Man X is in Marvel vs. Capcom, and Mega Man X in the same universe as Mega Man, since Dr. Light created both of them. Mega Man is in Smash Bros, and so is Pac Man, who appears in Wreck-it Ralph. One scene in Wreck-it Ralph shows a Teenage Mutant Ninja Turtles arcade machine, and the Teenage Mutant Ninja Turtles have a comic book crossover with Batman. Scooby Doo and the Mystery Gang show up in an episode of Batman. Scooby Doo, of course, has a crossover with Johnny Bravo. Johnny Bravo is in an obscure Smash Bros. ripoff for the Wii, called Cartoon Network: Punch Time Explosion. All three Powerpuff Girls show up in this game. Therefore, my conclusion here is that Fortnite does in fact take place in the same universe as The Powerpuff Girls.```");
+            }
+            [Command("RickandMorty")]
+            public async Task RickandMorty(CommandContext ctx)
+            {
+                await ctx.TriggerTypingAsync();
+                await ctx.RespondAsync("My teacher said to my I'm a failure, that I'll never amount to anything. I scoffed at him. Shocked, my teacher asked what's so funny, my future is on the line. 'Well...you see professor' I say as the teacher prepares to laugh at my answer, rebuttal at hand. 'I watch Rick and Morty.' The class is shocked, they merely watch pleb shows like the big bang theory to feign intelligence, not grasping the humor. '...how ? I can't even understand it's sheer nuance and subtlety.' 'Well you see...WUBBA LUBBA DUB DUB!' One line student laughs in the back, I turn to see a who this fellow genius is. It's none other than Albert Einstein.");
             }
         }
     }
