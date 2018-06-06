@@ -29,7 +29,11 @@ Updates the database to reflect that you owe `<name>` $`<amount>`.
 
 ### `!owesme <name> <amount>`
 
-Requests `<name>` to update the database to reflect that they owe you $`<amount>`. `<name>` will get a notification by the bot to confirm if the `<amount>` is correct.
+Requests `<name>` to update the database to reflect that they owe you $`<amount>`. 
+
+`<name>` will get a notification by the bot to confirm if the `<amount>` is correct.
+
+This command will only work if the user `<name>` is online.
 
 ### `!whoiowe`
 
@@ -45,6 +49,8 @@ Pays the user `<name>` $`<amount>`. This command will only work if `<name>` is o
 
 You can also substitute `<amount>` for the word `full`, which will pay the amount in full, or the exact amount you owe to `<name>`.
 
+This command will only work if the user `<name>` is online.
+
 ## Jawla Functions: As proprietary as things come.
 
 Some functions are on cooldown system to avoid comment spam. Because I know there will be comment spam.
@@ -57,7 +63,7 @@ Can't decide on a place to drop in PUBG? Use arguments `Erangel/Forest` or `Mira
 
 Gets a list of restaurants the bot currently has recorded.
 
-### `!pickrestaurant`, `!eats`, `!pickfood`, `!dinner`, `imhungry`
+### `!pickrestaurant`, `!eats`, `!pickfood`, `!dinner`, `!imhungry`
 
 Picks a random place to eat in case Chris Chow is planning an event.
 
