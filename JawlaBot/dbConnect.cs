@@ -12,7 +12,6 @@ namespace JawlaBot
 {
     class dbConnect
     {
-
         static private IMongoDatabase database = Program.client.GetDatabase("jawlamoney");
         static private IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("users");
 
@@ -29,14 +28,15 @@ namespace JawlaBot
                 Console.WriteLine("already connected to the database");
             }
         }
+
         private static async void dbInsert(string id, BsonDocument doc)
         {
-
             await collection.ReplaceOneAsync(
                 filter: new BsonDocument("id", id),
                 options: new UpdateOptions { IsUpsert = true },
                 replacement: doc);
         }
+
         public static void UserExists(string id)
         {
             CheckConnection();
@@ -58,16 +58,13 @@ namespace JawlaBot
                 Console.WriteLine("This user exists as a document");
             }
         }
+
         public static async void UserOwes(string payerId, string payeeId, double amount)
         {
             //grab the payer's document
             var query = Builders<BsonDocument>.Filter.Eq("id", payerId);
-
             var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
-
             User payer = JsonConvert.DeserializeObject<User>(result.ToString());
-
-            //update the 'oweme' part - check if there is an array already, if so update, if not, create
             bool payeeExists = false;
 
             for(int i=0; i<payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
@@ -78,7 +75,7 @@ namespace JawlaBot
                     payeeExists = true;
                 }
             }
-            //create the money and person if the payee doesn't yet exist
+            //if payee doesn't exist then create a document for them
             if (!payeeExists)
             {
                 IOwe payee = new IOwe();
@@ -86,22 +83,17 @@ namespace JawlaBot
                 payee.amount = Math.Round(amount,2);
                 payer.IOwe.Add(payee);
             }
-
             //update the user document and insert
             string output = JsonConvert.SerializeObject(payer);
-
             BsonDocument entry = BsonDocument.Parse(output);
-
             dbInsert(payerId, entry);
         }
+
         public static async void UserIsOwed(string userOwedId, string userPayingId, double amount)
         {
             var query = Builders<BsonDocument>.Filter.Eq("id", userOwedId);
-
             var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
-
             User userBeingPaid = JsonConvert.DeserializeObject<User>(result.ToString());
-
             bool payerExists = false;
 
             for(int i=0; i < userBeingPaid.owesMe.Count; i++)
@@ -121,20 +113,16 @@ namespace JawlaBot
             }
 
             string output = JsonConvert.SerializeObject(userBeingPaid);
-
             BsonDocument entry = BsonDocument.Parse(output);
-
             dbInsert(userOwedId, entry);
         }
+
         public static List<IOwe> WhoIowe(string userId)
         {
             UserExists(userId);
             var query = Builders<BsonDocument>.Filter.Eq("id", userId);
-
             var result = collection.Find(query).Project<BsonDocument>("{_id: 0, IOwe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
-
             User usersIOwe = JsonConvert.DeserializeObject<User>(result.ToString());
-
             return usersIOwe.IOwe;
         }
 
@@ -142,11 +130,8 @@ namespace JawlaBot
         {
             UserExists(userId);
             var query = Builders<BsonDocument>.Filter.Eq("id", userId);
-
             var result = collection.Find(query).Project<BsonDocument>("{_id: 0, owesMe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
-
             User usersThatOwe = JsonConvert.DeserializeObject<User>(result.ToString());
-
             return usersThatOwe.owesMe;
         }
     }

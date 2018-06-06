@@ -11,8 +11,7 @@ namespace JawlaBot
         public static string PUBGDrops(string map)
         {
             var mapFile = File.ReadAllLines($@"C:\Users\Naysan\source\repos\JawlaBot\JawlaBot\{map}Drops.txt");
-            Random rnd = new Random();
-            
+            Random rnd = new Random();          
             return mapFile[rnd.Next(mapFile.Length)];
         }
 
@@ -20,7 +19,6 @@ namespace JawlaBot
         {
             var list = File.ReadAllLines($@"C:\Users\Naysan\source\repos\JawlaBot\JawlaBot\Restaurants.txt");
             Random rnd = new Random();
-
             return list[rnd.Next(list.Length)];
         }
 

@@ -28,7 +28,6 @@ namespace JawlaBot
         public static Cooldown cooldown = new Cooldown();
 
         public static MongoClient client = null;
-        
 
         static void Main(string[] args)
         {
@@ -42,7 +41,6 @@ namespace JawlaBot
             using (var fs = File.OpenRead("config.json"))
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 json = await sr.ReadToEndAsync();
-
  
             var cfgjson = JsonConvert.DeserializeObject<ConfigJson>(json);
 
@@ -61,8 +59,6 @@ namespace JawlaBot
             });
 
             commands.RegisterCommands<JawlaCommands>();
-
-            //TODO: Add interactivity module and configuration
 
             interactivity = discord.UseInteractivity(new InteractivityConfiguration
             {
@@ -101,20 +97,8 @@ namespace JawlaBot
                             await e.Message.RespondAsync(":regional_indicator_h: :regional_indicator_o:  :regional_indicator_o:  :regional_indicator_y:  :regional_indicator_a:  :regional_indicator_h:");
                             return;
                     }
-
                 }
             };
-
-            //discord.MessageCreated += async e => //check the cooldown
-            //{
-            //    if (e.Author.IsBot == false)
-            //    {
-            //        var test = e.Message.Timestamp.Second - 2;
-            //        await e.Message.RespondAsync($"update cooldown here {test}");
-
-            //    }
-            //};
-
             await discord.ConnectAsync();
             await Task.Delay(-1);
         }
