@@ -63,7 +63,7 @@ Can't decide on a place to drop in PUBG? Use arguments `Erangel/Forest` or `Mira
 
 Gets a list of restaurants the bot currently has recorded.
 
-### `!pickrestaurant`, `!eats`, `!pickfood`, `!dinner`, `imhungry`
+### `!pickrestaurant`, `!eats`, `!pickfood`, `!dinner`, `!imhungry`
 
 Picks a random place to eat in case Chris Chow is planning an event.
 
