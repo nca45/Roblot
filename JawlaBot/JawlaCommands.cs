@@ -311,7 +311,6 @@ namespace JawlaBot
                 await ctx.RespondAsync("You need to be in a voice channel.");
 
             vnc = await vnext.ConnectAsync(chn);
-            await ctx.RespondAsync($"Joining Channel {ctx.Channel.Name}");
         }
 
         private async Task Leave(CommandContext ctx)
@@ -323,7 +322,6 @@ namespace JawlaBot
                 await ctx.RespondAsync("Not connected in this guild.");
 
             vnc.Disconnect();
-            await ctx.RespondAsync($"Leaving Channel {ctx.Channel.Name}");
         }
 
         private async Task StreamAudio(CommandContext ctx, string audiofile)
@@ -370,7 +368,7 @@ namespace JawlaBot
         [Command("yeahboi")]
         public async Task LongestYeahBoi(CommandContext ctx)
         {
-            await StreamAudio(ctx, "yeahboi.mp3");
+            await StreamAudio(ctx, "yeahboi");
         }
 
         [Command("stop")]
