@@ -21,7 +21,7 @@ namespace JawlaBot
             if (Program.client == null)
             {
                 Console.WriteLine("we have not connected to the database yet - now connecting");
-                Program.client = new MongoClient("mongodb://nca45:sh0wmemoremoney@ds235860.mlab.com:35860/jawlamoney");
+                Program.client = new MongoClient("mongodb://user:pass@ds235860.mlab.com:35860/jawlamoney");
 
             }
             else
