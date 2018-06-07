@@ -16,6 +16,7 @@ This project is currently in progress and is written using the DSharpPlus API an
 ## Features Planned
 
 * Stream music from youtube with playlist saving
+* Grab text body from top posts of subreddits
 
 # Documentation
 
