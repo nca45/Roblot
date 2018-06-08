@@ -5,8 +5,13 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
+using MongoDB.Driver.Core;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Newtonsoft.Json;
+using JawlaBot.JSON_Classes;
 
 namespace JawlaBot
 {
@@ -20,20 +25,23 @@ namespace JawlaBot
 
         static VoiceNextClient voice;
 
+        public static Cooldown cooldown = new Cooldown();
+
+        public static MongoClient client = null;
 
         static void Main(string[] args)
         {
+
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         static async Task MainAsync(string[] arg)
         {
-
             var json = "";
             using (var fs = File.OpenRead("config.json"))
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 json = await sr.ReadToEndAsync();
-
+ 
             var cfgjson = JsonConvert.DeserializeObject<ConfigJson>(json);
 
             discord = new DiscordClient(new DiscordConfiguration
@@ -52,8 +60,6 @@ namespace JawlaBot
 
             commands.RegisterCommands<JawlaCommands>();
 
-            //TODO: Add interactivity module and configuration
-
             interactivity = discord.UseInteractivity(new InteractivityConfiguration
             {
                 PaginationBehaviour = TimeoutBehaviour.Delete,
@@ -62,15 +68,37 @@ namespace JawlaBot
             });
 
             voice = discord.UseVoiceNext();
-
             discord.MessageCreated += async e =>
             {
-                if (e.Message.Content.ToLower().EndsWith("xd")) 
+                if (e.Message.Content.ToLower().Replace(" ", String.Empty).Equals("canigetahooyah")) 
                 {
-                    await e.Message.RespondAsync("😠 There will be no 'xd's on my channel.");
+                    var rnd = new Random();
+                    var nxt = rnd.Next(0, 10);
+                    switch (nxt)
+                    {
+                        case 0:
+                            await e.Message.RespondAsync("Not happening bud.");
+                            return;
+                        case 1:
+                        case 2:
+                            await e.Message.RespondAsync("HOOYAH");
+                            return;
+                        case 3:
+                        case 4:
+                        case 5:
+                            await e.Message.RespondAsync("***HOOYAH***");
+                            return;
+                        case 6:
+                        case 7:
+                            await e.Message.RespondAsync("```HOOYAH```");
+                            return;
+                        case 8:
+                        case 9:
+                            await e.Message.RespondAsync(":regional_indicator_h: :regional_indicator_o:  :regional_indicator_o:  :regional_indicator_y:  :regional_indicator_a:  :regional_indicator_h:");
+                            return;
+                    }
                 }
             };
-
             await discord.ConnectAsync();
             await Task.Delay(-1);
         }

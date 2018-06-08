@@ -40,10 +40,6 @@ TestResult.xml
 [Rr]eleasePS/
 dlldata.c
 
-# Ignore the config file
-config.json
-.json
-
 # DNX
 project.lock.json
 project.fragment.lock.json
@@ -263,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Configs
+JawlaBot/config.json
