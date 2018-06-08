@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
+using DSharpPlus.VoiceNext;
 using Newtonsoft.Json;
 
 namespace JawlaBot
@@ -16,6 +17,8 @@ namespace JawlaBot
         static CommandsNextModule commands;
 
         static InteractivityModule interactivity;
+
+        static VoiceNextClient voice;
 
 
         static void Main(string[] args)
@@ -57,6 +60,8 @@ namespace JawlaBot
                 PaginationTimeout = TimeSpan.FromMinutes(5),
                 Timeout = TimeSpan.FromMinutes(5)
             });
+
+            voice = discord.UseVoiceNext();
 
             discord.MessageCreated += async e =>
             {

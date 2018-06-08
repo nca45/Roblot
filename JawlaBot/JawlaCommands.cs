@@ -8,6 +8,7 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.VoiceNext;
 
 namespace JawlaBot
 {
@@ -84,6 +85,42 @@ namespace JawlaBot
 
             // and finally post the results
             await ctx.RespondAsync(string.Join("\n", results));
+        }
+        //Setup for longest yeah boi ever and richtard
+
+        //Join will become command of both yeahboi and richtard
+        [Command("join")]
+        public async Task Join(CommandContext ctx)
+        {
+            var vnext = ctx.Client.GetVoiceNextClient();
+
+            var vnc = vnext.GetConnection(ctx.Guild);
+            if (vnc != null)
+            {
+                await ctx.RespondAsync("Already Connected");
+            }
+            var chn = ctx.Member.VoiceState?.Channel;
+            if (chn == null)
+            {
+                await ctx.RespondAsync("You are not in a voice channel!");
+            }
+
+            vnc = await vnext.ConnectAsync(chn);
+            await ctx.RespondAsync($"Joined {ctx.Channel.Name}");
+        }
+
+        [Command("leave")]
+        public async Task Leave(CommandContext ctx)
+        {
+            var vnext = ctx.Client.GetVoiceNextClient();
+
+            var vnc = vnext.GetConnection(ctx.Guild);
+            if(vnc == null)
+            {
+                await ctx.RespondAsync("Not connected to any voice channel");
+            }
+            vnc.Disconnect();
+            await ctx.RespondAsync($"Left {ctx.Channel.Name}");
         }
     }
 }

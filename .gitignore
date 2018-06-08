@@ -42,6 +42,7 @@ dlldata.c
 
 # Ignore the config file
 config.json
+.json
 
 # DNX
 project.lock.json
