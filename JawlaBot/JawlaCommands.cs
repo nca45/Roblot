@@ -22,7 +22,7 @@ namespace JawlaBot
     class JawlaCommands
     {
 
-        [Description("Gives a record of which people the user owes and how much")]
+        [Description("Gives a list of people who you owe")]
         [Command("whoiowe")]
         public async Task WhoIOwe(CommandContext ctx)
         {
@@ -49,7 +49,7 @@ namespace JawlaBot
             await ctx.RespondAsync(embed: embed);
         }
 
-        [Description("Gives a record of who owes the user and how much")]
+        [Description("Gives a list of people who owe you")]
         [Command("whoowesme")]
         public async Task WhoOwesMe(CommandContext ctx)
         {
@@ -76,9 +76,9 @@ namespace JawlaBot
             await ctx.RespondAsync(embed: embed);
         }
 
-        [Description("Records an amount of money the user owes to")]
+        [Description("Records an amount of money you owe someone")]
         [Command("iowe")] 
-        public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, double amount)
+        public async Task Iowe(CommandContext ctx, [Description("The person who the user owes money to")] DiscordMember member, [Description("The amount of money owed")] double amount)
         {
             if (ctx.Member.Username == member.Username)
             {
@@ -108,9 +108,9 @@ namespace JawlaBot
             }
         }
 
-        [Description("Pays the user x amount of money if owed")]
+        [Description("Pays someone x amount of money if owed")]
         [Command("pay")]
-        public async Task Pay(CommandContext ctx, DiscordMember payee, string amount)
+        public async Task Pay(CommandContext ctx, [Description("Who you are paying")] DiscordMember payee, [Description("The amount of money paid")] string amount)
         {
             bool isNum = Double.TryParse(amount, out double amountToBePaid);
 
@@ -199,8 +199,8 @@ namespace JawlaBot
         }
 
         [Command("owesme")]
-        [Description("Requests an amount of money from a user")]
-        public async Task Oweme(CommandContext ctx, DiscordMember user, double amount)
+        [Description("Requests an amount of money from someone")]
+        public async Task Oweme(CommandContext ctx, [Description("The person you are requesting money from")] DiscordMember user, [Description("The amount of money requested")] double amount)
         {
             if (ctx.Member.Username == user.Username)
             {
@@ -255,10 +255,42 @@ namespace JawlaBot
                 }
             }
         }
+        [Command("setcooldown")]
+        [Aliases("setcooldowntime", "cooldown")]
+        [Description("Sets the cooldown of the voice memes. You must be an admin to change this setting")]
+        public async Task SetCooldown(CommandContext ctx, [Description("The new cooldown time in seconds")] int newtime)
+        {
+            var roles = ctx.Member.Roles;
+            string finalmsg = "";
+            bool isadmin = false;
+            foreach(var currRole in roles)
+            {
 
+                isadmin = (currRole.Name == "Admin") ? true : false;
+            }
+            if (isadmin)
+            {
+                if(newtime < 0 || newtime > 600)
+                {
+                    finalmsg = "Error: Cooldown time can't be less than 0 or greater than 10 minutes (600 seconds)";
+                }
+                else
+                {
+                    Program.cooldown.cooldownTime = newtime;
+                    finalmsg = $"New cooldown time set - {newtime} seconds.";
+                }
+            }
+            else
+            {
+                finalmsg = "Error: You're not an admin";
+            }
+
+            await ctx.RespondAsync(finalmsg);
+        }
         [Command("pubgdrop")]
         [Aliases("drop")]
-        public async Task List(CommandContext ctx, string map)
+        [Description("Get a random location to drop in PUBG")]
+        public async Task List(CommandContext ctx, [Description("The map you are playing on - Erangel/Forest or Miramar/Desert")] string map)
         {
             string location = "";
 
@@ -275,6 +307,7 @@ namespace JawlaBot
 
         [Command("listrestaurants")]
         [Aliases("listeats")]
+        [Description("Gets a list of restaurants frequently visited")]
         public async Task ListRestaurants(CommandContext ctx)
         {
             string finalList = "";
@@ -294,6 +327,7 @@ namespace JawlaBot
 
         [Command("pickrestaurant")]
         [Aliases("imhungry", "eats", "pickfood", "dinner")]
+        [Description("Gets a random restaurant from the list")]
         public async Task PickRestaurant(CommandContext ctx)
         {
             await ctx.RespondAsync($"Let's go eat at {Lists.Restaurants()}.");
@@ -367,6 +401,7 @@ namespace JawlaBot
         }
 
         [Command("yeahboi")]
+        [Description("Ask the bot to show you its longest yeah boy ever")]
         public async Task LongestYeahBoi(CommandContext ctx)
         {
             await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.mp3");
@@ -374,6 +409,7 @@ namespace JawlaBot
 
         [Command("stop")]
         [Aliases("timetostop", "frankstop", "itstimetostop", "notokay")]
+        [Description("Ask the bot to let your friends know that this is not okay, and this needs to stop. Now.")]
         public async Task TimetoStop(CommandContext ctx)
         {
             await StreamAudio(ctx, GetRandomFile("frankstop"));
@@ -381,13 +417,15 @@ namespace JawlaBot
 
         [Command("pranked")]
         [Aliases("frankprank", "prank", "gotem")]
+        [Description("Ask the bot to let your friends know that they just got pranked.")]
         public async Task Pranked(CommandContext ctx)
         {
             await StreamAudio(ctx, GetRandomFile("frankprank"));
         }
 
         [Command("frank")]
-        [Aliases("filthyfrank")]
+        [Aliases("filthyfrank", "idubbbz")]
+        [Description("Just some random Filthy Frank + Idubbbz audio bites")]
         public async Task Frank(CommandContext ctx)
         {
             await StreamAudio(ctx, GetRandomFile("frank"));
@@ -402,7 +440,8 @@ namespace JawlaBot
 
         //some copy pasta memes
         [Group("memes", CanInvokeWithoutSubcommand = true)] // this makes the class a group, but with a twist; the class now needs an ExecuteGroupAsync method
-        [Aliases("copypasta")]
+        [Aliases("copypasta","meme")]
+        [Description("Displays a random copypasta meme. No arguments will pick a random meme for you.")]
         public class ExampleExecutableGroup
         {
             public async Task ExecuteGroupAsync(CommandContext ctx) //no subcommandd will execute this method automatically
