@@ -16,13 +16,11 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using JawlaBot.JSON_Classes;
-using System.Reflection;
 
 namespace JawlaBot
 {
     class JawlaCommands
     {
-        string currentDirectory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location); //get the current directory of where the executable is
 
         [Description("Gives a record of which people the user owes and how much")]
         [Command("whoiowe")]
@@ -339,7 +337,7 @@ namespace JawlaBot
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = currentDirectory + @"\ffmpeg.exe",
+                    FileName = Program.currentDirectory + @"\ffmpeg.exe",
                     Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
                     RedirectStandardOutput = true,
                     UseShellExecute = false
@@ -371,7 +369,7 @@ namespace JawlaBot
         [Command("yeahboi")]
         public async Task LongestYeahBoi(CommandContext ctx)
         {
-            await StreamAudio(ctx, currentDirectory + @"\yeahboi.mp3");
+            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.mp3");
         }
 
         [Command("stop")]
@@ -398,7 +396,7 @@ namespace JawlaBot
         private string GetRandomFile(string directory) //grabs random file from the directory
         {
             Random rnd = new Random();
-            var fileName = System.IO.Directory.GetFiles(currentDirectory + $@"\{directory}", "*mp3");
+            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*mp3");
             return fileName[rnd.Next(0, fileName.Length)];
         }
 

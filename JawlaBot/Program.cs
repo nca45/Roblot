@@ -12,6 +12,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using JawlaBot.JSON_Classes;
+using System.Reflection;
 
 namespace JawlaBot
 {
@@ -28,6 +29,8 @@ namespace JawlaBot
         public static Cooldown cooldown = new Cooldown();
 
         public static MongoClient client = null;
+
+        public static string currentDirectory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location); //get the current directory of where the executable is
 
         static void Main(string[] args)
         {
