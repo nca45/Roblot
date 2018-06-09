@@ -199,6 +199,7 @@ namespace JawlaBot
         }
 
         [Command("owesme")]
+        [Aliases("oweme")]
         [Description("Requests an amount of money from someone")]
         public async Task Oweme(CommandContext ctx, [Description("The person you are requesting money from")] DiscordMember user, [Description("The amount of money requested")] double amount)
         {
@@ -258,7 +259,7 @@ namespace JawlaBot
         [Command("setcooldown")]
         [Aliases("setcooldowntime", "cooldown")]
         [Description("Sets the cooldown of the voice memes. You must be an admin to change this setting")]
-        public async Task SetCooldown(CommandContext ctx, [Description("The new cooldown time in seconds")] int newtime)
+        public async Task SetCooldown(CommandContext ctx, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
         {
             var roles = ctx.Member.Roles;
             string finalmsg = "";
