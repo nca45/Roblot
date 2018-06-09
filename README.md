@@ -80,9 +80,15 @@ Ask the bot to let your friends know that this is not okay, and this needs to st
 
 Ask the bot to let your friends know that they just got pranked.
 
-### `!frank`, `!filthyfrank` - YOU MUST BE IN A VOICE CHANNEL
+### `!frank`, `!filthyfrank`, `!idubbbz` - YOU MUST BE IN A VOICE CHANNEL
 
-Just some random Filthy Frank audio bites.
+Just some random Filthy Frank + Idubbbz audio bites.
+
+### `!setcooldown <seconds>`, `!cooldown <seconds>`
+
+Sets the cooldown of the voice memes in seconds. You must be an admin to change this setting.
+
+Maximum time is 600 seconds, or 10 minutes.
 
 ### `!memes<(optional) copypasta>`, `!copypasta <(optional) copypasta>`
 
