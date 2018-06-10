@@ -431,6 +431,14 @@ namespace JawlaBot
             await StreamAudio(ctx, GetRandomFile("frankstop"), "stop");
         }
 
+        [Command("wow")]
+        [Aliases("omgwow", "omg")]
+        [Description("Express your excitement and surprise!")]
+        public async Task Wow(CommandContext ctx)
+        {
+            await StreamAudio(ctx, GetRandomFile("wow"), "wow");
+        }
+
         [Command("pranked")]
         [Aliases("frankprank", "prank", "gotem")]
         [Description("Ask the bot to let your friends know that they just got pranked.")]
