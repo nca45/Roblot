@@ -259,7 +259,7 @@ namespace JawlaBot
         [Command("setcooldown")]
         [Aliases("setcooldowntime", "cooldown")]
         [Description("Sets the cooldown of the voice memes. You must be an admin to change this setting")]
-        public async Task SetCooldown(CommandContext ctx, [Description("Which command you want to change")] string command, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
+        public async Task SetCooldown(CommandContext ctx, [Description("The command you want to change")] string command, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
         {
             Cooldown currCooldown = null;
             Program.audioCategories.TryGetValue(command, out currCooldown);
@@ -386,7 +386,7 @@ namespace JawlaBot
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "ffmpeg",
+                    FileName = Program.currentDirectory + @"\ffmpeg.exe",
                     Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
                     RedirectStandardOutput = true,
                     UseShellExecute = false
@@ -420,7 +420,7 @@ namespace JawlaBot
         public async Task LongestYeahBoi(CommandContext ctx)
         {
 
-            await StreamAudio(ctx, Program.currentDirectory + "/yeahboi.ogg", "yeahboi");
+            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.ogg", "yeahboi");
         }
 
         [Command("stop")]
@@ -450,7 +450,7 @@ namespace JawlaBot
         private string GetRandomFile(string directory) //grabs random file from the directory
         {
             Random rnd = new Random();
-            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $"/{directory}", "*ogg");
+            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*ogg");
             return fileName[rnd.Next(0, fileName.Length)];
         }
 
