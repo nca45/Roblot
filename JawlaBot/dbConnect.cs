@@ -67,11 +67,11 @@ namespace JawlaBot
             User payer = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payeeExists = false;
 
-            for(int i=0; i<payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
+            for (int i = 0; i < payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
             {
-                if(payer.IOwe[i].id == payeeId)
+                if (payer.IOwe[i].id == payeeId)
                 {
-                    payer.IOwe[i].amount += Math.Round(amount,2);
+                    payer.IOwe[i].amount += Math.Round(amount, 2);
                     payeeExists = true;
                 }
             }
@@ -80,7 +80,7 @@ namespace JawlaBot
             {
                 IOwe payee = new IOwe();
                 payee.id = payeeId;
-                payee.amount = Math.Round(amount,2);
+                payee.amount = Math.Round(amount, 2);
                 payer.IOwe.Add(payee);
             }
             //update the user document and insert
@@ -96,9 +96,9 @@ namespace JawlaBot
             User userBeingPaid = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payerExists = false;
 
-            for(int i=0; i < userBeingPaid.owesMe.Count; i++)
+            for (int i = 0; i < userBeingPaid.owesMe.Count; i++)
             {
-                if(userBeingPaid.owesMe[i].id == userPayingId)
+                if (userBeingPaid.owesMe[i].id == userPayingId)
                 {
                     userBeingPaid.owesMe[i].amount += Math.Round(amount, 2);
                     payerExists = true;
