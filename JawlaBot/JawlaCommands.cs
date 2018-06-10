@@ -386,7 +386,7 @@ namespace JawlaBot
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = Program.currentDirectory + @"\ffmpeg.exe",
+                    FileName = "ffmpeg",
                     Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
                     RedirectStandardOutput = true,
                     UseShellExecute = false
@@ -420,7 +420,7 @@ namespace JawlaBot
         public async Task LongestYeahBoi(CommandContext ctx)
         {
 
-            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.mp3", "yeahboi");
+            await StreamAudio(ctx, Program.currentDirectory + "/yeahboi.ogg", "yeahboi");
         }
 
         [Command("stop")]
@@ -450,7 +450,7 @@ namespace JawlaBot
         private string GetRandomFile(string directory) //grabs random file from the directory
         {
             Random rnd = new Random();
-            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*ogg");
+            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $"/{directory}", "*ogg");
             return fileName[rnd.Next(0, fileName.Length)];
         }
 
