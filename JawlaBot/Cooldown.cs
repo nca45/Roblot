@@ -13,7 +13,7 @@ namespace JawlaBot
 
         private bool allowCommand = true;
 
-        public bool CheckCoolDown(DSharpPlus.Entities.DiscordMessage msg) 
+        public double CheckCoolDown(DSharpPlus.Entities.DiscordMessage msg) 
         {
             var currentMessage = msg.Timestamp.DateTime;
             var timeElapsed = currentMessage.Subtract(previousCommandTime).TotalSeconds;
@@ -21,11 +21,11 @@ namespace JawlaBot
             if (allowCommand || timeElapsed >= cooldownTime) //we are allowed to run the command!
             {
                 allowCommand = false;
-                return true;
+                return -1;
             }
             else
             {
-                return false;
+                return Math.Round(cooldownTime - timeElapsed);
             }
         }
 

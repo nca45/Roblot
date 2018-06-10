@@ -376,8 +376,8 @@ namespace JawlaBot
 
         private async Task StreamAudio(CommandContext ctx, string audiofile, string command)
         {
-            var testBool = Program.audioCategories[command].CheckCoolDown(ctx.Message);
-            if (testBool)
+            var remainingTime = Program.audioCategories[command].CheckCoolDown(ctx.Message);
+            if (remainingTime == -1)
             {
                 await Join(ctx);
                 var vnc = ctx.Client.GetVoiceNextClient().GetConnection(ctx.Guild);
@@ -411,7 +411,7 @@ namespace JawlaBot
             }
             else
             {
-                await ctx.RespondAsync("That command is on cooldown, wait a moment!");
+                await ctx.RespondAsync($"That command ({command}) is on cooldown, please wait {remainingTime} more seconds!");
             }
         }
 
