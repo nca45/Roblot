@@ -13,6 +13,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using JawlaBot.JSON_Classes;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace JawlaBot
 {
@@ -26,7 +27,7 @@ namespace JawlaBot
 
         static VoiceNextClient voice;
 
-        public static Cooldown cooldown = new Cooldown();
+        public static Dictionary<string, Cooldown> audioCategories;
 
         public static MongoClient client = null;
 
@@ -102,8 +103,27 @@ namespace JawlaBot
                     }
                 }
             };
+
+            discord.Ready += async x =>
+            {
+                audioCategories = new Dictionary<string, Cooldown>()
+                {
+                    {"frank", new Cooldown()},
+                    {"stop", new Cooldown()},
+                    {"yeahboi", new Cooldown{cooldownTime = 60 }},
+                    {"pranked", new Cooldown()},
+                    {"wow", new Cooldown{cooldownTime = 1}}
+                };
+                
+
+                DiscordGame botstatus = new DiscordGame("ne1 gummies? xd");
+                await discord.UpdateStatusAsync(botstatus);
+                return;
+            };
+
             await discord.ConnectAsync();
             await Task.Delay(-1);
+
         }
     }
     // this structure will hold data from config.json

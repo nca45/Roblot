@@ -259,8 +259,11 @@ namespace JawlaBot
         [Command("setcooldown")]
         [Aliases("setcooldowntime", "cooldown")]
         [Description("Sets the cooldown of the voice memes. You must be an admin to change this setting")]
-        public async Task SetCooldown(CommandContext ctx, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
+        public async Task SetCooldown(CommandContext ctx, [Description("Which command you want to change")] string command, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
         {
+            Cooldown currCooldown = null;
+            Program.audioCategories.TryGetValue(command, out currCooldown);
+            DiscordEmbed embed = null;
             var roles = ctx.Member.Roles;
             string finalmsg = "";
             bool isadmin = false;
@@ -269,7 +272,7 @@ namespace JawlaBot
 
                 isadmin = (currRole.Name == "Admin") ? true : false;
             }
-            if (isadmin)
+            if (isadmin && currCooldown != null)
             {
                 if(newtime < 0 || newtime > 600)
                 {
@@ -277,16 +280,27 @@ namespace JawlaBot
                 }
                 else
                 {
-                    Program.cooldown.cooldownTime = newtime;
-                    finalmsg = $"New cooldown time set - {newtime} seconds.";
+                    currCooldown.cooldownTime = newtime;
+                    finalmsg = $"New cooldown time set for command '{command}' - {newtime} seconds.";
                 }
             }
             else
             {
-                finalmsg = "Error: You're not an admin";
-            }
+                finalmsg = "Error: Either you're not an admin or that command doesn't exist.";
+                var arrayOfKeys = Program.audioCategories.Keys.ToArray();
+                var listofkeys = "";
+                foreach(var keys in arrayOfKeys)
+                {
+                    listofkeys += keys + "\n";
+                }
+                embed = new DiscordEmbedBuilder
+                {
+                    Title = "Here's the current list of audio command ids",
+                    Description = listofkeys
+                };
+             }
+                await ctx.RespondAsync(finalmsg, embed:embed);
 
-            await ctx.RespondAsync(finalmsg);
         }
         [Command("pubgdrop")]
         [Aliases("drop")]
@@ -360,9 +374,9 @@ namespace JawlaBot
             vnc.Disconnect();
         }
 
-        private async Task StreamAudio(CommandContext ctx, string audiofile)
+        private async Task StreamAudio(CommandContext ctx, string audiofile, string command)
         {
-            var testBool = Program.cooldown.CheckCoolDown(ctx.Message);
+            var testBool = Program.audioCategories[command].CheckCoolDown(ctx.Message);
             if (testBool)
             {
                 await Join(ctx);
@@ -393,11 +407,11 @@ namespace JawlaBot
                 }
                 await vnc.SendSpeakingAsync(false);
                 await Leave(ctx); //leave right after the command is done
-                Program.cooldown.startCooldown(DateTime.Now); //start the cooldown now
+                Program.audioCategories[command].startCooldown(DateTime.Now); //start the cooldown now
             }
             else
             {
-                await ctx.RespondAsync("You're on cooldown, wait a moment!");
+                await ctx.RespondAsync("That command is on cooldown, wait a moment!");
             }
         }
 
@@ -405,7 +419,8 @@ namespace JawlaBot
         [Description("Ask the bot to show you its longest yeah boy ever")]
         public async Task LongestYeahBoi(CommandContext ctx)
         {
-            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.mp3");
+
+            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.mp3", "yeahboi");
         }
 
         [Command("stop")]
@@ -413,7 +428,7 @@ namespace JawlaBot
         [Description("Ask the bot to let your friends know that this is not okay, and this needs to stop. Now.")]
         public async Task TimetoStop(CommandContext ctx)
         {
-            await StreamAudio(ctx, GetRandomFile("frankstop"));
+            await StreamAudio(ctx, GetRandomFile("frankstop"), "stop");
         }
 
         [Command("pranked")]
@@ -421,7 +436,7 @@ namespace JawlaBot
         [Description("Ask the bot to let your friends know that they just got pranked.")]
         public async Task Pranked(CommandContext ctx)
         {
-            await StreamAudio(ctx, GetRandomFile("frankprank"));
+            await StreamAudio(ctx, GetRandomFile("frankprank"), "pranked");
         }
 
         [Command("frank")]
@@ -429,13 +444,13 @@ namespace JawlaBot
         [Description("Just some random Filthy Frank + Idubbbz audio bites")]
         public async Task Frank(CommandContext ctx)
         {
-            await StreamAudio(ctx, GetRandomFile("frank"));
+            await StreamAudio(ctx, GetRandomFile("frank"), "frank");
         }
 
         private string GetRandomFile(string directory) //grabs random file from the directory
         {
             Random rnd = new Random();
-            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*mp3");
+            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*ogg");
             return fileName[rnd.Next(0, fileName.Length)];
         }
 
