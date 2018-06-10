@@ -10,17 +10,17 @@ using JawlaBot.JSON_Classes;
 
 namespace JawlaBot
 {
-    class dbConnect
+    class dbConnection
     {
-        static private IMongoDatabase database = Program.client.GetDatabase("jawlamoney");
+        static private IMongoDatabase database = JawlaBot.client.GetDatabase("jawlamoney");
         static private IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("users");
 
         private static void CheckConnection()
         {
-            if (Program.client == null)
+            if (JawlaBot.client == null)
             {
                 Console.WriteLine("we have not connected to the database yet - now connecting");
-                Program.client = new MongoClient("mongodb://nca45:moneyiscool1@ds235860.mlab.com:35860/jawlamoney");
+                JawlaBot.client = new MongoClient("mongodb://user:pass@ds235860.mlab.com:35860/jawlamoney");
 
             }
             else
@@ -67,11 +67,11 @@ namespace JawlaBot
             User payer = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payeeExists = false;
 
-            for(int i=0; i<payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
+            for (int i = 0; i < payer.IOwe.Count; i++) //iterate over the list of people to check if we need to add more money
             {
-                if(payer.IOwe[i].id == payeeId)
+                if (payer.IOwe[i].id == payeeId)
                 {
-                    payer.IOwe[i].amount += Math.Round(amount,2);
+                    payer.IOwe[i].amount += Math.Round(amount, 2);
                     payeeExists = true;
                 }
             }
@@ -80,7 +80,7 @@ namespace JawlaBot
             {
                 IOwe payee = new IOwe();
                 payee.id = payeeId;
-                payee.amount = Math.Round(amount,2);
+                payee.amount = Math.Round(amount, 2);
                 payer.IOwe.Add(payee);
             }
             //update the user document and insert
@@ -96,9 +96,9 @@ namespace JawlaBot
             User userBeingPaid = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payerExists = false;
 
-            for(int i=0; i < userBeingPaid.owesMe.Count; i++)
+            for (int i = 0; i < userBeingPaid.owesMe.Count; i++)
             {
-                if(userBeingPaid.owesMe[i].id == userPayingId)
+                if (userBeingPaid.owesMe[i].id == userPayingId)
                 {
                     userBeingPaid.owesMe[i].amount += Math.Round(amount, 2);
                     payerExists = true;

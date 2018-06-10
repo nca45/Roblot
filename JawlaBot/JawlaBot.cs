@@ -17,7 +17,7 @@ using System.Collections.Generic;
 
 namespace JawlaBot
 {
-    class Program
+    class JawlaBot
     {
         static DiscordClient discord;
 
@@ -45,7 +45,7 @@ namespace JawlaBot
             using (var fs = File.OpenRead("config.json"))
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 json = await sr.ReadToEndAsync();
- 
+
             var cfgjson = JsonConvert.DeserializeObject<ConfigJson>(json);
 
             discord = new DiscordClient(new DiscordConfiguration
@@ -74,14 +74,14 @@ namespace JawlaBot
             voice = discord.UseVoiceNext();
             discord.MessageCreated += async e =>
             {
-                if (e.Message.Content.ToLower().Replace(" ", String.Empty).Equals("canigetahooyah")) 
+                if (e.Message.Content.ToLower().Replace(" ", String.Empty).Equals("canigetahooyah"))
                 {
                     var rnd = new Random();
                     var nxt = rnd.Next(0, 10);
                     switch (nxt)
                     {
                         case 0:
-                            await e.Message.RespondAsync("Shut the fuck up.");
+                            await e.Message.RespondAsync("Not happening, bud.");
                             return;
                         case 1:
                         case 2:
@@ -114,7 +114,7 @@ namespace JawlaBot
                     {"pranked", new Cooldown()},
                     {"wow", new Cooldown{cooldownTime = 1}}
                 };
-                
+
 
                 DiscordGame botstatus = new DiscordGame("ne1 gummies? xd");
                 await discord.UpdateStatusAsync(botstatus);
