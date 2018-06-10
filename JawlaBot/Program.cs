@@ -81,7 +81,7 @@ namespace JawlaBot
                     switch (nxt)
                     {
                         case 0:
-                            await e.Message.RespondAsync("Shut the fuck up.");
+                            await e.Message.RespondAsync("Not happening, bud.");
                             return;
                         case 1:
                         case 2:
