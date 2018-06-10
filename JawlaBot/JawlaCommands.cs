@@ -26,7 +26,7 @@ namespace JawlaBot
         [Command("whoiowe")]
         public async Task WhoIOwe(CommandContext ctx)
         {
-            List<IOwe> usersIOwe = dbConnect.WhoIowe(ctx.Member.Id.ToString());
+            List<IOwe> usersIOwe = dbConnection.WhoIowe(ctx.Member.Id.ToString());
             int count = 0;
             string finalString = "";
 
@@ -53,7 +53,7 @@ namespace JawlaBot
         [Command("whoowesme")]
         public async Task WhoOwesMe(CommandContext ctx)
         {
-            List<OwesMe> usersOweMe = dbConnect.WhoOwesMe(ctx.Member.Id.ToString());
+            List<OwesMe> usersOweMe = dbConnection.WhoOwesMe(ctx.Member.Id.ToString());
             int count = 0;
             string finalString = "";
 
@@ -94,11 +94,11 @@ namespace JawlaBot
             }
             else
             {
-                dbConnect.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
-                dbConnect.UserOwes(ctx.Member.Id.ToString(), member.Id.ToString(), amount);
+                dbConnection.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
+                dbConnection.UserOwes(ctx.Member.Id.ToString(), member.Id.ToString(), amount);
                 //then update payee
-                dbConnect.UserExists(member.Id.ToString());
-                dbConnect.UserIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), amount);
+                dbConnection.UserExists(member.Id.ToString());
+                dbConnection.UserIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), amount);
                 // present the poll
                 var embed = new DiscordEmbedBuilder
                 {
@@ -137,7 +137,7 @@ namespace JawlaBot
             else
             {
                 double amountOwed = 0;
-                List<IOwe> usersIOwe = dbConnect.WhoIowe(ctx.Member.Id.ToString());
+                List<IOwe> usersIOwe = dbConnection.WhoIowe(ctx.Member.Id.ToString());
                 bool userFound = false;
                 int count = 0;
 
@@ -184,8 +184,8 @@ namespace JawlaBot
                         var poll_result = await interactivity.WaitForMessageReactionAsync(xm => xm == confirmEmoji || xm == declineEmoji, msg, payee, pollDuration); //wait for reaction on this particular message
                         if (poll_result != null && poll_result.Emoji.Name == confirmEmoji)
                         {
-                            dbConnect.UserOwes(ctx.Member.Id.ToString(), payee.Id.ToString(), amountToBePaid * (-1));
-                            dbConnect.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid * (-1));
+                            dbConnection.UserOwes(ctx.Member.Id.ToString(), payee.Id.ToString(), amountToBePaid * (-1));
+                            dbConnection.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid * (-1));
 
                             await ctx.RespondAsync("Payment Confirmed!");
                         }
@@ -242,11 +242,11 @@ namespace JawlaBot
 
                 if (poll_result != null && poll_result.Emoji.Name == confirmEmoji)
                 {
-                    dbConnect.UserExists(user.Id.ToString());
-                    dbConnect.UserOwes(user.Id.ToString(), ctx.Member.Id.ToString(), amount);
+                    dbConnection.UserExists(user.Id.ToString());
+                    dbConnection.UserOwes(user.Id.ToString(), ctx.Member.Id.ToString(), amount);
 
-                    dbConnect.UserExists(ctx.Member.Id.ToString());
-                    dbConnect.UserIsOwed(ctx.Member.Id.ToString(), user.Id.ToString(), amount);
+                    dbConnection.UserExists(ctx.Member.Id.ToString());
+                    dbConnection.UserIsOwed(ctx.Member.Id.ToString(), user.Id.ToString(), amount);
 
                     await ctx.RespondAsync("Confirmed!");
                 }
@@ -262,7 +262,7 @@ namespace JawlaBot
         public async Task SetCooldown(CommandContext ctx, [Description("The command you want to change")] string command, [Description("The new cooldown time in seconds. Maximum time is 600 seconds (10 minutes)")] int newtime)
         {
             Cooldown currCooldown = null;
-            Program.audioCategories.TryGetValue(command, out currCooldown);
+            JawlaBot.audioCategories.TryGetValue(command, out currCooldown);
             DiscordEmbed embed = null;
             var roles = ctx.Member.Roles;
             string finalmsg = "";
@@ -287,7 +287,7 @@ namespace JawlaBot
             else
             {
                 finalmsg = "Error: Either you're not an admin or that command doesn't exist.";
-                var arrayOfKeys = Program.audioCategories.Keys.ToArray();
+                var arrayOfKeys = JawlaBot.audioCategories.Keys.ToArray();
                 var listofkeys = "";
                 foreach(var keys in arrayOfKeys)
                 {
@@ -376,7 +376,7 @@ namespace JawlaBot
 
         private async Task StreamAudio(CommandContext ctx, string audiofile, string command)
         {
-            var remainingTime = Program.audioCategories[command].CheckCoolDown(ctx.Message);
+            var remainingTime = JawlaBot.audioCategories[command].CheckCoolDown(ctx.Message);
             if (remainingTime == -1)
             {
                 await Join(ctx);
@@ -386,7 +386,7 @@ namespace JawlaBot
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = Program.currentDirectory + @"\ffmpeg.exe",
+                    FileName = JawlaBot.currentDirectory + @"\ffmpeg.exe",
                     Arguments = $@"-i ""{file}"" -ac 2 -f s16le -ar 48000 pipe:1 ",
                     RedirectStandardOutput = true,
                     UseShellExecute = false
@@ -407,7 +407,7 @@ namespace JawlaBot
                 }
                 await vnc.SendSpeakingAsync(false);
                 await Leave(ctx); //leave right after the command is done
-                Program.audioCategories[command].startCooldown(DateTime.Now); //start the cooldown now
+                JawlaBot.audioCategories[command].startCooldown(DateTime.Now); //start the cooldown now
             }
             else
             {
@@ -420,7 +420,7 @@ namespace JawlaBot
         public async Task LongestYeahBoi(CommandContext ctx)
         {
 
-            await StreamAudio(ctx, Program.currentDirectory + @"\yeahboi.ogg", "yeahboi");
+            await StreamAudio(ctx, JawlaBot.currentDirectory + @"\yeahboi.ogg", "yeahboi");
         }
 
         [Command("stop")]
@@ -458,7 +458,7 @@ namespace JawlaBot
         private string GetRandomFile(string directory) //grabs random file from the directory
         {
             Random rnd = new Random();
-            var fileName = System.IO.Directory.GetFiles(Program.currentDirectory + $@"\{directory}", "*ogg");
+            var fileName = System.IO.Directory.GetFiles(JawlaBot.currentDirectory + $@"\{directory}", "*ogg");
             return fileName[rnd.Next(0, fileName.Length)];
         }
 
