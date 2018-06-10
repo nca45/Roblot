@@ -24,7 +24,7 @@ namespace JawlaBot
 
         public static string[] ListRestaurants()
         {
-            return File.ReadAllLines(Program.currentDirectory + "\textfiles\Restaurants.txt");
+            return File.ReadAllLines(Program.currentDirectory + @"\textfiles\Restaurants.txt");
         }
 
         //add restaurant? Depends on how often we try out new places to eat.
