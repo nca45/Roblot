@@ -256,6 +256,27 @@ namespace JawlaBot
                 }
             }
         }
+
+        [Command("listcooldowns")]
+        [Aliases("listcooldown")]
+        [Description("Lists the current cooldowns for each command")]
+        public async Task ListCooldown(CommandContext ctx)
+        {
+            string listofCooldowns = "";
+            var keys = JawlaBot.audioCategories.Keys.ToArray();
+
+            foreach (var cooldown in keys)
+            {
+                listofCooldowns += $"{cooldown}: " + JawlaBot.audioCategories[cooldown].cooldownTime + " seconds\n";
+            }
+            DiscordEmbed embed = new DiscordEmbedBuilder
+            {
+                Title = "Here's the current list of cooldown times for each command.",
+                Description = listofCooldowns
+            };
+            await ctx.RespondAsync(embed: embed);
+        }
+
         [Command("setcooldown")]
         [Aliases("setcooldowntime", "cooldown")]
         [Description("Sets the cooldown of the voice memes. You must be an admin to change this setting")]
@@ -302,6 +323,7 @@ namespace JawlaBot
                 await ctx.RespondAsync(finalmsg, embed:embed);
 
         }
+
         [Command("pubgdrop")]
         [Aliases("drop")]
         [Description("Get a random location to drop in PUBG")]
