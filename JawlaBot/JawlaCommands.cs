@@ -257,7 +257,7 @@ namespace JawlaBot
             }
         }
         [Command("listcooldowns")]
-        [Aliases("listcooldown")]
+        [Aliases("listcooldown", "cooldowntimes")]
         [Description("Lists the current cooldowns for each command")]
         public async Task ListCooldown(CommandContext ctx)
         {
