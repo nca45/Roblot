@@ -84,9 +84,21 @@ Ask the bot to let your friends know that they just got pranked.
 
 Just some random Filthy Frank + Idubbbz audio bites.
 
-### `!setcooldown <seconds>`, `!cooldown <seconds>`
+### `!wow`, `!omg`, `!omgwow` - YOU MUST BE IN A VOICE CHANNEL
+
+Express your surprise and excitement!
+
+### `!setcooldown <command> <seconds>`, `!cooldown <command> <seconds>`
 
 Sets the cooldown of the voice memes in seconds. You must be an admin to change this setting.
+
+Current list of audio commands are:
+
+* frank
+* stop
+* yeahboi
+* pranked
+* wow
 
 Maximum time is 600 seconds, or 10 minutes.
 
