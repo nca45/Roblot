@@ -338,6 +338,10 @@ namespace JawlaBot
             {
                 location = Lists.BRDrops("Miramar");
             }
+            if(map.ToLower() == "fornite")
+            {
+                location = Lists.BRDrops("Fortnite");
+            }
             await ctx.RespondAsync((location == "") ? ("That's not a valid map!") : ($"You should drop at {location}!"));
         }
 
