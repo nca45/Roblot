@@ -46,7 +46,7 @@ namespace JawlaBot
                 Description = finalString
             };
 
-            await ctx.RespondAsync(embed: embed);
+            await ctx.RespondAsync($"{ctx.Member.Mention}", embed: embed);
         }
 
         [Description("Gives a list of people who owe you")]
@@ -73,7 +73,7 @@ namespace JawlaBot
                 Description = finalString
             };
 
-            await ctx.RespondAsync(embed: embed);
+            await ctx.RespondAsync($"{ctx.Member.Mention}", embed: embed);
         }
 
         [Description("Records an amount of money you owe someone")]
@@ -105,6 +105,7 @@ namespace JawlaBot
                     Title = $"{ctx.Member.DisplayName} has added ${amount} to the amount they owe you."
                 };
                 var msg = await ctx.RespondAsync($"{member.Mention}", embed: embed);
+                await WhoIOwe(ctx);
             }
         }
 
@@ -188,9 +189,12 @@ namespace JawlaBot
                             dbConnection.UserIsOwed(payee.Id.ToString(), ctx.Member.Id.ToString(), amountToBePaid * (-1));
 
                             await ctx.RespondAsync("Payment Confirmed!");
+                            await msg.DeleteAsync();
+                            await WhoIOwe(ctx);
                         }
                         else
                         {
+                            await msg.DeleteAsync();
                             await ctx.RespondAsync("Request Declined");
                         }
                     }
@@ -249,9 +253,12 @@ namespace JawlaBot
                     dbConnection.UserIsOwed(ctx.Member.Id.ToString(), user.Id.ToString(), amount);
 
                     await ctx.RespondAsync("Confirmed!");
+                    await msg.DeleteAsync();
+                    await WhoOwesMe(ctx);
                 }
                 else
                 {
+                    await msg.DeleteAsync();
                     await ctx.RespondAsync("Request Declined");
                 }
             }
@@ -338,7 +345,7 @@ namespace JawlaBot
             {
                 location = Lists.BRDrops("Miramar");
             }
-            if(map.ToLower() == "fornite")
+            if(map.ToLower() == "fortnite")
             {
                 location = Lists.BRDrops("Fortnite");
             }
