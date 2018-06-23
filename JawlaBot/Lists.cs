@@ -8,7 +8,7 @@ namespace JawlaBot
     class Lists
     {
 
-        public static string PUBGDrops(string map)
+        public static string BRDrops(string map)
         {
             var mapFile = File.ReadAllLines(JawlaBot.currentDirectory + $@"\textfiles\{map}Drops.txt");
             Random rnd = new Random();          

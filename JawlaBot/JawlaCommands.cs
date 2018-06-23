@@ -324,20 +324,24 @@ namespace JawlaBot
 
         }
 
-        [Command("pubgdrop")]
+        [Command("brdrop")]
         [Aliases("drop")]
         [Description("Get a random location to drop in PUBG")]
-        public async Task List(CommandContext ctx, [Description("The map you are playing on - Erangel/Forest or Miramar/Desert")] string map)
+        public async Task List(CommandContext ctx, [Description("The map you are playing on - Erangel/Forest or Miramar/Desert for PUBG, or 'Fortnite' if playing Fornite")] string map)
         {
             string location = "";
 
             if (map.ToLower() == "erangel" || map.ToLower() == "forest")
             {
-                location = Lists.PUBGDrops("Erangel");
+                location = Lists.BRDrops("Erangel");
             }
             if (map.ToLower() == "miramar" || map.ToLower() == "desert")
             {
-                location = Lists.PUBGDrops("Miramar");
+                location = Lists.BRDrops("Miramar");
+            }
+            if(map.ToLower() == "Fortnite")
+            {
+                location = Lists.BRDrops("Fortnite");
             }
             await ctx.RespondAsync((location == "") ? ("That's not a valid map!") : ($"You should drop at {location}!"));
         }
