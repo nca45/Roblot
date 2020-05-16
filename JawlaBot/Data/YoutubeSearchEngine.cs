@@ -7,25 +7,34 @@ using System.Net.Http;
 using System.IO;
 using System.Linq;
 using Roblot.Data;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Roblot.Data
 {
     public sealed class YoutubeSearchEngine
     {
-        private string API = "AIzaSyCyszPJJeF1ju1wm5SnwPj4KDioBhmKJ1U";
+        private string API;
         private HttpClient http;
         public YoutubeSearchEngine()
         {
             http = new HttpClient
             {
                 BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/")
+
             };
+            var json = "";
+            using (var fs = File.OpenRead("youtubesearchkey.json"))
+            using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                json = sr.ReadToEnd();
+
+            var youtubeJson = JsonConvert.DeserializeObject<ConfigYoutube>(json);
+            API = youtubeJson.Key;
         }
 
         public async Task<IEnumerable<YoutubeSearchResults>> SearchAsync(string terms)
         {
-            Console.WriteLine(terms);
+            Console.WriteLine(API);
             var searchUrl = new Uri($"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&type=video&fields=items(id(videoId),snippet(title,channelTitle))&key={this.API}&q={WebUtility.UrlEncode(terms)}");
             //deserialize the results
             var searchJson = "{}";
@@ -59,5 +68,11 @@ namespace Roblot.Data
             return searchData.Select((x,i) => new YoutubeSearchResults(WebUtility.HtmlDecode(x.Snippet.Title), x.Snippet.Creator, x.Id.videoId, durationData[i].contentDetails.duration));
 
         }
+    }
+
+    public struct ConfigYoutube
+    {
+        [JsonProperty("key")]
+        public string Key { get; private set; }
     }
 }

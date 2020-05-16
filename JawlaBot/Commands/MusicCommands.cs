@@ -207,7 +207,7 @@ namespace Roblot
         }
 
         [Command("disconnect")]
-        [Aliases("d")]
+        [Aliases("d", "leave")]
         [Description("Empties the queue and disconnects the bot from the channel")]
         public async Task DisconnectAsync(CommandContext ctx)
         {
