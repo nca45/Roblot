@@ -5,22 +5,30 @@ using MongoDB.Driver;
 using MongoDB;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using JawlaBot.JSON_Classes;
+using Roblot.JSON_Classes;
+using System.Threading.Tasks;
 
-
-namespace JawlaBot
+namespace Roblot
 {
-    class dbConnection
+    public sealed class dbConnection
     {
-        static private IMongoDatabase database = JawlaBot.client.GetDatabase("jawlamoney");
-        static private IMongoCollection<BsonDocument> collection = database.GetCollection<BsonDocument>("users");
+        private MongoClient Client { get; set; } = null;
+        private IMongoDatabase Database { get; set; } //= Roblot.client.GetDatabase("jawlamoney");
+        private IMongoCollection<BsonDocument> Collection { get; set; } //= database.GetCollection<BsonDocument>("users");
 
-        private static void CheckConnection()
+        public dbConnection()
         {
-            if (JawlaBot.client == null)
+            this.Client = new MongoClient("mongodb://nca45:moneyiscool1@ds235860.mlab.com:35860/jawlamoney");
+            Database = Client.GetDatabase("jawlamoney");
+            Collection = Database.GetCollection<BsonDocument>("users");
+
+        }
+        private void CheckConnection()
+        {
+            if (Client == null)
             {
                 Console.WriteLine("we have not connected to the database yet - now connecting");
-                JawlaBot.client = new MongoClient("mongodb://nca45:pass@ds235860.mlab.com:35860/jawlamoney");
+                Client = new MongoClient("mongodb://nca45:moneyiscool1@ds235860.mlab.com:35860/jawlamoney");
 
             }
             else
@@ -29,26 +37,28 @@ namespace JawlaBot
             }
         }
 
-        private static async void dbInsert(string id, BsonDocument doc)
+        private void dbInsert(string id, BsonDocument doc)
         {
-            await collection.ReplaceOneAsync(
+            Collection.ReplaceOne(
                 filter: new BsonDocument("id", id),
                 options: new UpdateOptions { IsUpsert = true },
                 replacement: doc);
         }
 
-        public static void UserExists(string id)
+        public void UserExists(string id)
         {
             CheckConnection();
 
             var query = Builders<BsonDocument>.Filter.Eq("id", id);
-            bool result = collection.Find(query).Limit(1).Any(); //this checks for existance
+            bool result = Collection.Find(query).Limit(1).Any(); //this checks for existance
             if (!result)
             {
                 Console.WriteLine("creating a document for this user");
 
-                User user = new User();
-                user.id = id;
+                User user = new User
+                {
+                    id = id
+                };
                 string output = JsonConvert.SerializeObject(user);
                 BsonDocument entry = BsonDocument.Parse(output);
                 dbInsert(id, entry);
@@ -59,11 +69,11 @@ namespace JawlaBot
             }
         }
 
-        public static async void UserOwes(string payerId, string payeeId, double amount)
+        public async Task UserOwes(string payerId, string payeeId, double amount)
         {
             //grab the payer's document
             var query = Builders<BsonDocument>.Filter.Eq("id", payerId);
-            var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
+            var result = await Collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
             User payer = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payeeExists = false;
 
@@ -78,9 +88,11 @@ namespace JawlaBot
             //if payee doesn't exist then create a document for them
             if (!payeeExists)
             {
-                IOwe payee = new IOwe();
-                payee.id = payeeId;
-                payee.amount = Math.Round(amount, 2);
+                IOwe payee = new IOwe
+                {
+                    id = payeeId,
+                    amount = Math.Round(amount, 2)
+                };
                 payer.IOwe.Add(payee);
             }
             //update the user document and insert
@@ -89,10 +101,10 @@ namespace JawlaBot
             dbInsert(payerId, entry);
         }
 
-        public static async void UserIsOwed(string userOwedId, string userPayingId, double amount)
+        public async Task UserIsOwed(string userOwedId, string userPayingId, double amount)
         {
             var query = Builders<BsonDocument>.Filter.Eq("id", userOwedId);
-            var result = await collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
+            var result = await Collection.Find(query).Project<BsonDocument>("{_id: 0}").Limit(1).SingleAsync(); //exclude the '_id' that is given with each document
             User userBeingPaid = JsonConvert.DeserializeObject<User>(result.ToString());
             bool payerExists = false;
 
@@ -106,9 +118,11 @@ namespace JawlaBot
             }
             if (!payerExists)
             {
-                OwesMe payer = new OwesMe();
-                payer.id = userPayingId;
-                payer.amount = Math.Round(amount, 2);
+                OwesMe payer = new OwesMe
+                {
+                    id = userPayingId,
+                    amount = Math.Round(amount, 2)
+                };
                 userBeingPaid.owesMe.Add(payer);
             }
 
@@ -117,20 +131,20 @@ namespace JawlaBot
             dbInsert(userOwedId, entry);
         }
 
-        public static List<IOwe> WhoIowe(string userId)
+        public List<IOwe> WhoIowe(string userId)
         {
             UserExists(userId);
             var query = Builders<BsonDocument>.Filter.Eq("id", userId);
-            var result = collection.Find(query).Project<BsonDocument>("{_id: 0, IOwe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
+            var result = Collection.Find(query).Project<BsonDocument>("{_id: 0, IOwe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
             User usersIOwe = JsonConvert.DeserializeObject<User>(result.ToString());
             return usersIOwe.IOwe;
         }
 
-        public static List<OwesMe> WhoOwesMe(string userId)
+        public List<OwesMe> WhoOwesMe(string userId)
         {
             UserExists(userId);
             var query = Builders<BsonDocument>.Filter.Eq("id", userId);
-            var result = collection.Find(query).Project<BsonDocument>("{_id: 0, owesMe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
+            var result = Collection.Find(query).Project<BsonDocument>("{_id: 0, owesMe: 1}").Limit(1).Single(); //exclude the '_id' that is given with each document
             User usersThatOwe = JsonConvert.DeserializeObject<User>(result.ToString());
             return usersThatOwe.owesMe;
         }

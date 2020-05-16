@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using DSharpPlus;
 
-namespace JawlaBot
+namespace Roblot
 {
-    class Cooldown
+    public sealed class Cooldown
     {
+
         public int cooldownTime = 10; //in seconds - time for each cooldown period TODO: Change to minutes
 
         public DateTime previousCommandTime; //time the command was sent

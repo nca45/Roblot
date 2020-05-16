@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace JawlaBot.JSON_Classes
+namespace Roblot.JSON_Classes
 {
     public class OwesMe
     {

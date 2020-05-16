@@ -3,30 +3,26 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace JawlaBot
+namespace Roblot
 {
-    class Lists
+    public sealed class Lists
     {
+        private string CurrentDirectory { get; }
 
-        public static string BRDrops(string map)
+        public Lists(string currentDirectory)
         {
-            var mapFile = File.ReadAllLines(JawlaBot.currentDirectory + $"/textfiles/{map}Drops.txt");
-            Random rnd = new Random();          
-            return mapFile[rnd.Next(mapFile.Length)];
+            this.CurrentDirectory = currentDirectory;
         }
-
-        public static string Restaurants()
+        public string Restaurants()
         {
-            var list = File.ReadAllLines(JawlaBot.currentDirectory + "/textfiles/Restaurants.txt");
+            var list = File.ReadAllLines(CurrentDirectory + "/textfiles/Restaurants.txt");
             Random rnd = new Random();
             return list[rnd.Next(list.Length)];
         }
 
-        public static string[] ListRestaurants()
+        public string[] ListRestaurants()
         {
-            return File.ReadAllLines(JawlaBot.currentDirectory + "/textfiles/Restaurants.txt");
+            return File.ReadAllLines(CurrentDirectory + "/textfiles/Restaurants.txt");
         }
-
-        //add restaurant? Depends on how often we try out new places to eat.
     }
 }
