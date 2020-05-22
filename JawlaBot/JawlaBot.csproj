@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <Compile Remove="Commands\AudioCommands.cs" />
+    <Compile Remove="Data\YoutubeSearchEngine.cs" />
+    <Compile Remove="Data\YoutubeSearchResults.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,13 +30,14 @@
     <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-nightly-00692" />
     <PackageReference Include="MongoDB.Driver" Version="2.11.0-beta1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Pastebin.API.CSharp" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="youtubesearchkey.json">
+    <None Update="pasteBinAPIKey.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -17,29 +17,24 @@ using Roblot.Services;
 using Roblot.Data;
 using Roblot.Items;
 using System.Xml;
+using PastebinAPI;
+
 namespace Roblot
 {
     public sealed class MusicCommands : BaseCommandModule
     {
-        //private YoutubeSearchEngine Youtube { get; }
         private LavalinkService Lavalink { get; }
         private MusicData MusicData { get; set; }
 
-        public MusicCommands(MusicData music, YoutubeSearchEngine youtube, LavalinkService lavalink)
+        public MusicCommands(MusicData music, LavalinkService lavalink)
         {
+            
             this.MusicData = music;
             this.Lavalink = lavalink;
-            //this.Youtube = youtube;
-
-            //MusicData = new MusicData(Lavalink);
-
-            //Console.WriteLine(XmlConvert.ToTimeSpan("00:04:18"));
         }
-
         // Lavalink service to handle all lavalink configuration and init
         // MusicData service to handle all the options and attributes of the player (volume setting, shuffle setting, queue, now playing string)
         // This class will ONLY handle commands
-
 
         //add support for searching playlists?
 
@@ -66,7 +61,6 @@ namespace Roblot
             }
             this.MusicData.TextChannel = ctx.Channel;
             await base.BeforeExecutionAsync(ctx).ConfigureAwait(false);
-
         }
 
         [Command("play")]
@@ -144,6 +138,7 @@ namespace Roblot
             {
                 await searchResults.CreateReactionAsync(emoji);
             }
+
             var cancelEmoji = DiscordEmoji.FromName(ctx.Client, ":x:");
             await searchResults.CreateReactionAsync(cancelEmoji);
             // get reactions
@@ -351,6 +346,17 @@ namespace Roblot
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{track.Track.Title}")} by {Formatter.Bold($"{track.Track.Author}")} - ({Time_Convert.CompressLavalinkTime(track.Track.Length)})").ConfigureAwait(false);
 
             }
+        }
+
+        // Each member will have their own personal playlists
+        // Allow multiple playlists for each person?
+
+        [Command("export")]
+        [Aliases("save")]
+        [Description("Saves the current queue and currently playing song (if applicable) as a personal playlist")]
+        public async Task exportAsync(CommandContext ctx)
+        {
+            await ctx.RespondAsync("Saved!");
         }
 
         [Command("about")]
