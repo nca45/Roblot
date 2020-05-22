@@ -109,7 +109,7 @@ namespace Roblot
                 .AddSingleton(new Lists(CurrentDirectory))
                 .AddSingleton(new LavalinkService(this.Discord, cfg.ipAddress, cfg.port))
                 .AddSingleton(new Cooldown())
-                .AddSingleton(new YoutubeSearchEngine())
+               .AddSingleton(new YoutubeSearchEngine())
                 .AddSingleton(this.Discord)
                 .AddSingleton<dbConnection>()
                 .AddSingleton<MusicData>()

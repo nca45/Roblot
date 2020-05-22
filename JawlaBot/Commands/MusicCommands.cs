@@ -21,7 +21,7 @@ namespace Roblot
 {
     public sealed class MusicCommands : BaseCommandModule
     {
-        private YoutubeSearchEngine Youtube { get; }
+        //private YoutubeSearchEngine Youtube { get; }
         private LavalinkService Lavalink { get; }
         private MusicData MusicData { get; set; }
 
@@ -29,7 +29,7 @@ namespace Roblot
         {
             this.MusicData = music;
             this.Lavalink = lavalink;
-            this.Youtube = youtube;
+            //this.Youtube = youtube;
 
             //MusicData = new MusicData(Lavalink);
 
@@ -123,15 +123,12 @@ namespace Roblot
         {
             var interactivity = ctx.Client.GetInteractivity();
 
-            var results = await this.Youtube.SearchAsync(terms).ConfigureAwait(false);
-            if (!results.Any())
+            var results = await Lavalink.lavaRest.GetTracksAsync(terms, LavalinkSearchType.Youtube);
+            if(results.LoadResultType == LavalinkLoadResultType.NoMatches)
             {
-                //error handle if no result is returned
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":cry:")} I couldn't find anything with those search keys");
             }
-
-            // poll the results with reactions for each track
-            // Then when the commanding user clicks the reaction, edit the message to show 'now playing'
+            var trackResults = results.Tracks.Take(5);
 
             var pollDuration = TimeSpan.FromSeconds(30);
 
@@ -139,7 +136,7 @@ namespace Roblot
 
             // present the poll
 
-            var foo = string.Join("\n", results.Select((x, i) => $"Track {i + 1}: {Formatter.Bold(x.Title)} by {Formatter.Bold(x.Author)} - ({x.Duration})"));
+            var foo = string.Join("\n", trackResults.Select((x, i) => $"Track {i + 1}: {Formatter.Bold(x.Title)} by {Formatter.Bold(x.Author)} - ({Time_Convert.CompressLavalinkTime(x.Length)})"));
             var searchResults = await ctx.RespondAsync($"Here is what I found:\n\n{foo}");
 
             // add the options as reactions and add a cancel button
@@ -161,33 +158,19 @@ namespace Roblot
                     return;
                 }
                 int parseSelect = Int32.Parse(poll_result.Result.Emoji.Name.Substring(0, 1)) - 1;
-                var url = new Uri($"https://www.youtube.com/watch?v={results.ElementAt(parseSelect).Id}");
+                var track = trackResults.ElementAt(parseSelect);
 
-                var getTracks = await this.Lavalink.lavaRest.GetTracksAsync(url).ConfigureAwait(false);
-                var tracks = getTracks.Tracks;
-
-                if (getTracks.LoadResultType == LavalinkLoadResultType.LoadFailed || !tracks.Any())
-                {
-                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":cry:")} I couldn't find any tracks with that url").ConfigureAwait(false);
-                    return;
-                }
-                foreach (var trackElement in tracks)
-                {
-                    MusicData.QueueTrack(new TrackItem(trackElement, ctx.Member));
-                }
+                MusicData.QueueTrack(new TrackItem(track, ctx.Member));
 
                 await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
                 await MusicData.Play();
 
-                var track = tracks.First();
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Added {Formatter.Bold(track.Title)} by {Formatter.Bold(track.Author)} - ({Time_Convert.CompressLavalinkTime(track.Length)})");
-
             }
             else
             {
                 await searchResults.DeleteAsync();
                 await ctx.RespondAsync("Request Timed Out.");
-
             }
         }
 
