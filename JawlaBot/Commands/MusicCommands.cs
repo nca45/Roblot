@@ -359,6 +359,14 @@ namespace Roblot
             await ctx.RespondAsync("Saved!");
         }
 
+        [Command("load")]
+        [Aliases("import")]
+        [Description("Imports the user's playlist that they made")]
+        public async Task importAsync(CommandContext ctx)
+        {
+            await ctx.RespondAsync("Loaded!");
+        }
+
         [Command("about")]
         [Aliases("info", "i")]
         [Description("Gets info about the player")]
