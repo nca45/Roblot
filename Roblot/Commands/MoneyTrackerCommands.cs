@@ -19,6 +19,9 @@ using Roblot.JSON_Classes;
 
 namespace Roblot
 {
+    // Clean this up!! These commands aren't even used that much anyways
+
+
     //BUG: WHEN A PERSON LEAVES THE DISCORD SERVER, IF THAT PERSON IS IN ANOTHER USER'S LIST OF OWEME/IOWE, THEN THE COMMANDS WILL NOT WORK BECAUSE WE CALL MEMBER.DISPLAYNAME AND THERE IS NO MEMBER ANYMORE IF THEY LEAVE
     //      User is still within the database but bot cannot parse the user's id because it doesn't exist
 
@@ -26,9 +29,9 @@ namespace Roblot
     // Only have to modify whoiowe and whoowesme. If the member is gone there is no member variable to use for iowe, owesme and pay
     public class MoneyTrackerCommands:BaseCommandModule
     {
-        private dbConnection Connection { get;}
+        private dbConnectionService Connection { get;}
 
-        public MoneyTrackerCommands(dbConnection connection)
+        public MoneyTrackerCommands(dbConnectionService connection)
         {
             this.Connection = connection;
         }
@@ -37,7 +40,7 @@ namespace Roblot
         [Command("whoiowe")]
         public async Task WhoIOwe(CommandContext ctx)
         {
-            List<IOwe> usersIOwe = Connection.WhoIowe(ctx.Member.Id.ToString());
+            List<IOwe> usersIOwe = await Connection.WhoIowe(ctx.Member.Id.ToString());
             int count = 0;
             string finalString = "";
 
@@ -72,7 +75,7 @@ namespace Roblot
         [Command("whoowesme")]
         public async Task WhoOwesMe(CommandContext ctx)
         {
-            List<OwesMe> usersOweMe = Connection.WhoOwesMe(ctx.Member.Id.ToString());
+            List<OwesMe> usersOweMe = await Connection.WhoOwesMe(ctx.Member.Id.ToString());
             int count = 0;
             string finalString = "";
 
@@ -123,10 +126,10 @@ namespace Roblot
             }
             else
             {
-                Connection.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
+                await Connection.UserExists(ctx.Member.Id.ToString()); //check if calling user already has a document, create it if not
                 await Connection.UserOwes(ctx.Member.Id.ToString(), member.Id.ToString(), amount);
                 //then update payee
-                Connection.UserExists(member.Id.ToString());
+                await Connection.UserExists(member.Id.ToString());
                 await Connection.UserIsOwed(member.Id.ToString(), ctx.Member.Id.ToString(), amount);
                 // present the poll
                 var embed = new DiscordEmbedBuilder
@@ -167,7 +170,7 @@ namespace Roblot
             else
             {
                 double amountOwed = 0;
-                List<IOwe> usersIOwe = Connection.WhoIowe(ctx.Member.Id.ToString());
+                List<IOwe> usersIOwe = await Connection.WhoIowe(ctx.Member.Id.ToString());
                 bool userFound = false;
                 int count = 0;
 
@@ -275,10 +278,10 @@ namespace Roblot
 
                 if (poll_result.Result != null && poll_result.Result.Emoji.Name == confirmEmoji)
                 {
-                    Connection.UserExists(user.Id.ToString());
+                    await Connection.UserExists(user.Id.ToString());
                     await Connection.UserOwes(user.Id.ToString(), ctx.Member.Id.ToString(), amount);
 
-                    Connection.UserExists(ctx.Member.Id.ToString());
+                    await Connection.UserExists(ctx.Member.Id.ToString());
                     await Connection.UserIsOwed(ctx.Member.Id.ToString(), user.Id.ToString(), amount);
 
                     await ctx.RespondAsync("Confirmed!");

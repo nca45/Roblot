@@ -108,10 +108,9 @@ namespace Roblot
             this.Services = new ServiceCollection()
                 .AddSingleton(new Lists(CurrentDirectory))
                 .AddSingleton(new LavalinkService(this.Discord, cfg.ipAddress, cfg.port))
-                .AddSingleton(new Cooldown())
-               //.AddSingleton(new YoutubeSearchEngine())
                 .AddSingleton(this.Discord)
-                .AddSingleton<dbConnection>()
+                .AddSingleton<dbConnectionService>()
+                .AddSingleton<PasteBinService>()
                 .AddSingleton<MusicData>()
                 .AddSingleton(this)
                 .BuildServiceProvider(true);
@@ -126,8 +125,6 @@ namespace Roblot
             
 
             this.Commands.RegisterCommands(Assembly.GetExecutingAssembly()); //registers all commands inheriting basecommandmodule - CLASS MUST BE PUBLIC!
-
-            
 
             this.Interactivity = Discord.UseInteractivity(new InteractivityConfiguration
             {

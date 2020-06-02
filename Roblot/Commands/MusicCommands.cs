@@ -25,24 +25,22 @@ namespace Roblot
     {
         private LavalinkService Lavalink { get; }
         private MusicData MusicData { get; set; }
+        private PasteBinService PasteBin { get; }
 
-        public MusicCommands(MusicData music, LavalinkService lavalink)
+        public MusicCommands(MusicData music, LavalinkService lavalink, PasteBinService pastebin)
         {
             
             this.MusicData = music;
             this.Lavalink = lavalink;
+            this.PasteBin = pastebin;
         }
         // Lavalink service to handle all lavalink configuration and init
         // MusicData service to handle all the options and attributes of the player (volume setting, shuffle setting, queue, now playing string)
         // This class will ONLY handle commands
 
-        //add support for searching playlists?
-
-        // We can search for stuff easier now without having to go through youtube api
-        // Might want to migrate over to that later
-        // Also is able to support youtube playlists
-
-        // Might want to see how streams are handled later on
+        //TODO:
+        // Add support for inserting youtube playlists
+        // Add database support for discord playlists
 
         // Overrride the task before execution
         public override async Task BeforeExecutionAsync(CommandContext ctx)
@@ -348,23 +346,130 @@ namespace Roblot
             }
         }
 
-        // Each member will have their own personal playlists
-        // Allow multiple playlists for each person?
+        // Save to database
 
         [Command("export")]
         [Aliases("save")]
         [Description("Saves the current queue and currently playing song (if applicable) as a personal playlist")]
-        public async Task exportAsync(CommandContext ctx)
+        public async Task exportAsync(CommandContext ctx, [RemainingText, Description("Name of the Playlist")] string playlistName)
         {
-            await ctx.RespondAsync("Saved!");
+            var interactive = ctx.Client.GetInteractivity();
+
+            List<string> trackQueue = new List<string>();
+
+            //Check if queue is empty and there's nothing playing 
+            if (MusicData.PublicQueue.Count == 0 && MusicData.NowPlaying.Track == null)
+            {
+                await ctx.RespondAsync($"{ DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There's nothing in the queue or playing right now to save!").ConfigureAwait(false);
+                return;
+            }
+
+            if(String.IsNullOrWhiteSpace(playlistName))
+            {
+                await ctx.RespondAsync($"{ DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Playlist name is empty!").ConfigureAwait(false);
+                return;
+            }
+
+            // If there's a song playing currently add it to the queue
+            if (MusicData.NowPlaying.Track != null || MusicData.NowPlaying.Track.TrackString != null)
+            {
+                trackQueue.Add(MusicData.NowPlaying.Track.TrackString);
+            }
+
+            // Add each song in the queue
+            foreach (var track in MusicData.PublicQueue)
+            {
+                trackQueue.Add(track.Track.TrackString);
+            }
+
+            // Check if playlist name already exists
+            if(await PasteBin.playlistExists(playlistName))
+            {
+                // If already exists, ask if we want to overwrite
+                var pollDuration = TimeSpan.FromSeconds(30);
+
+                var overwriteConfirm = await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} There's already a playlist with the name {Formatter.Bold(playlistName)}. Would you like to overwrite it?");
+
+                // Get the answer from the user
+                var okReaction = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
+                await overwriteConfirm.CreateReactionAsync(okReaction);
+
+                var cancelReaction = DiscordEmoji.FromName(ctx.Client, ":x:");
+                await overwriteConfirm.CreateReactionAsync(cancelReaction);
+
+                var poll_result = await interactive.WaitForReactionAsync(x => x.Emoji == okReaction || x.Emoji == cancelReaction, overwriteConfirm, ctx.User, pollDuration);
+
+                // Don't do anything if user cancels or poll times out
+                if(poll_result.Result == null || poll_result.Result.Emoji == cancelReaction)
+                {
+                    await overwriteConfirm.DeleteAsync();
+                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Overwrite Cancelled");
+                    return;
+                }
+
+                // If yes, delete the old playlist
+                var deleteResult = await PasteBin.deletePlaylistAsync(playlistName);
+
+                // Error handling if deleting failed for some reason
+                if(deleteResult == PasteBinResult.Failed)
+                {
+                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem deleting the playlist");
+                    return;
+                }
+            }
+
+            // Save the playlist
+            var saveResult = await PasteBin.saveTracksAsync(trackQueue, playlistName);
+
+            if (saveResult == PasteBinResult.Successful)
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Playlist {Formatter.Bold(playlistName)} saved!");
+            }
+            else
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem saving the playlist {Formatter.Bold(playlistName)}.");
+            }
         }
 
+        // Should this replace the queue or add to existing items?
         [Command("load")]
         [Aliases("import")]
         [Description("Imports the user's playlist that they made")]
-        public async Task importAsync(CommandContext ctx)
+        public async Task importAsync(CommandContext ctx, [RemainingText, Description("Playlist name to load")] string playlistName)
         {
-            await ctx.RespondAsync("Loaded!");
+            IEnumerable<String> trackStrings = await PasteBin.loadTracks(playlistName);
+            if(trackStrings != null)
+            {
+                int trackCount = trackStrings.Count();
+
+                try
+                {
+                    IEnumerable<LavalinkTrack> tracks = await Lavalink.lavaRest.DecodeTracksAsync(trackStrings.ToArray());
+                    foreach (var track in tracks)
+                    {
+                        MusicData.QueueTrack(new TrackItem(track, ctx.Member));
+                    }
+                        await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
+                        await MusicData.Play();
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Loaded playlist {Formatter.Bold(playlistName)} with {Formatter.Bold(trackCount.ToString())} tracks");
+                        return;
+                }
+                catch(Exception e)
+                {
+                    Console.Error.WriteLine($"Exception {e} when decoding tracks");
+                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was an error loading the playlist");
+                }
+            }
+            await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Playlist name {Formatter.Bold(playlistName)} does not exist!");
+        }
+
+        // TODO: A way to delete playlists!
+        [Command("deletePlaylist")]
+        [Aliases("deletepl")]
+        [Description("Deletes a playlist")]
+        public async Task deletePlaylist(CommandContext ctx)
+        {
+            throw new NotImplementedException();
         }
 
         [Command("about")]

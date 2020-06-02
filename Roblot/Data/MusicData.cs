@@ -12,11 +12,7 @@ using Roblot.Items;
 
 namespace Roblot.Data
 {
-    /// <summary>
-    /// Holds all the commands for music playback
-    /// THEY CHANGED ALL METHOD NAMES AND HOW THEY ARE DONE
-    /// NOW YOU GOTTA TURN ALL THE METHODS INTO TASKS TO BE ASYNC
-    /// </summary>
+
     public sealed class MusicData
     {
 
