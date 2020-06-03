@@ -306,8 +306,6 @@ namespace Roblot
         [Aliases("q")]
         public async Task SeeQueueAsync(CommandContext ctx)
         {
-            // right now simply get all tracks in a string then display
-            // Later on we will paginate the tracks
             var queueString = String.Empty;
             var num = 1;
             var interactivity = ctx.Client.GetInteractivity();
@@ -323,6 +321,7 @@ namespace Roblot
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Queue is currently empty!");
                 return;
             }
+
             try
             {
                 foreach (var track in MusicData.PublicQueue)
@@ -330,8 +329,7 @@ namespace Roblot
                     queueString += $"{num}. {Formatter.Bold($"{track.Track.Title}")} by {Formatter.Bold($"{track.Track.Author}")} - ({Time_Convert.CompressLavalinkTime(track.Track.Length)})\n";
                     num++;
                 }
-                Console.WriteLine(queueString);
-                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} List of currently queued tracks: \n");
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Here is the list of currently queued tracks: \n");
                 var queuePages = interactivity.GeneratePagesInEmbed(queueString, SplitType.Line);
 
                 await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, queuePages, null, PaginationBehaviour.WrapAround);
@@ -406,17 +404,16 @@ namespace Roblot
                 {
                     case PlaylistResult.Cancelled:
                         await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Overwrite cancelled");
-                        break;
-
+                        return;
                     case PlaylistResult.Failed:
                         await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem deleting the playlist");
-                        break;
+                        return;
                     case PlaylistResult.Successful:
                         // Don't say anything if delete goes through - delete is just an intermediate step to overwriting
                         break;
                     default:
                         await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":REEE:")} You done goofed");
-                        break;
+                        return;
                 }
             }
 
@@ -433,7 +430,6 @@ namespace Roblot
             }
         }
 
-        // Should this replace the queue or add to existing items?
         [Command("load")]
         [Aliases("import")]
         [Description("Imports the user's playlist that they made")]
@@ -528,16 +524,21 @@ namespace Roblot
                 return;
             }
 
+            var interactivity = ctx.Client.GetInteractivity();
             string playlistInfo = string.Join('\n', listOfPlaylists.Select(x => $"{Formatter.Bold(x.Key)} - {Formatter.Bold(x.Value.ToString())} tracks"));
 
-            var embed = new DiscordEmbedBuilder()
+            try
             {
-                Title = "Here are the playlists I currently have saved",
-                Description = playlistInfo,
-                Color = DiscordColor.Aquamarine,
-            };
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Here is the list of playlists currently saved: \n");
+                var queuePages = interactivity.GeneratePagesInEmbed(playlistInfo, SplitType.Line);
 
-            await ctx.RespondAsync(embed: embed).ConfigureAwait(false);
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, queuePages, null, PaginationBehaviour.WrapAround);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException);
+            }
         }
 
         [Command("about")]
