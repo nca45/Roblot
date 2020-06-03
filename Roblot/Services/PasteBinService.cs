@@ -93,15 +93,26 @@ namespace Roblot.Services
 
         public async Task<IEnumerable<String>> loadTracksAsync(string playlistName)
         {
-
-            foreach(Paste paste in await User.ListPastesAsync(listPasteNum))
+            using (HttpClient client = new HttpClient())
             {
-                // For some reason it won't actually do 'toLower()' when i put this in the for loop so i put it out here and it works wut
-                var checkPaste = paste.Title.ToLower();
-                if(checkPaste == playlistName.ToLower())
+                foreach (Paste paste in await User.ListPastesAsync(listPasteNum))
                 {
-                    var rawText = await paste.GetRawAsync();
-                    return rawText.Split('\n').ToList<String>() ;
+                    // For some reason it won't actually do 'toLower()' when i put this in the for loop so i put it out here and it works wut
+                    var checkPaste = paste.Title.ToLower();
+                    if (checkPaste == playlistName.ToLower())
+                    {
+                        Console.WriteLine("Getting raw data from pastebin ...");
+                        try
+                        {
+                            String rawData = await client.GetStringAsync($"https://pastebin.com/raw/{paste.Key}");
+                            Console.WriteLine("Got it!");
+                            return rawData.Split('\n').ToList<String>();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
                 }
             }
             return null;
@@ -110,12 +121,24 @@ namespace Roblot.Services
         public async Task<Dictionary<String, int>> listPlaylistsAsync()
         {
             Dictionary<String, int> listOfPlaylists = new Dictionary<string, int>();
-
-            foreach (Paste paste in await User.ListPastesAsync(listPasteNum))
+            using (HttpClient client = new HttpClient())
             {
-                // get number of lines in the text
-                String rawData = await paste.GetRawAsync();
-                listOfPlaylists.Add(paste.Title, rawData.Split('\n').Length);
+                foreach (Paste paste in await User.ListPastesAsync(listPasteNum))
+                {
+                    // get number of lines in the text
+                    Console.WriteLine("Getting raw data from pastebin ...");
+                    try
+                    {
+                        String rawData = await client.GetStringAsync($"https://pastebin.com/raw/{paste.Key}");
+                        Console.WriteLine("Got it!");
+                        listOfPlaylists.Add(paste.Title, rawData.Split('\n').Length);
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+
             }
             return listOfPlaylists;
         }

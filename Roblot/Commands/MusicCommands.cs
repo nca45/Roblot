@@ -516,7 +516,9 @@ namespace Roblot
         [Description("Lists all playlists currently saved and the number of tracks they have")]
         public async Task ListPlaylists(CommandContext ctx)
         {
+            Console.WriteLine("Getting list of playlists...");
             Dictionary<String, int> listOfPlaylists = await PasteBin.listPlaylistsAsync();
+            Console.WriteLine("Got the playlists!");
 
             if (listOfPlaylists.Count == 0)
             {
@@ -524,7 +526,9 @@ namespace Roblot
                 return;
             }
 
+            Console.WriteLine("Getting the interactivity module...");
             var interactivity = ctx.Client.GetInteractivity();
+            Console.WriteLine("Got the module!");
             string playlistInfo = string.Join('\n', listOfPlaylists.Select(x => $"{Formatter.Bold(x.Key)} - {Formatter.Bold(x.Value.ToString())} tracks"));
 
             try
