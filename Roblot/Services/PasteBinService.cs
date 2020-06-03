@@ -39,7 +39,7 @@ namespace Roblot.Services
             client.Ready += Client_Ready;
         }
 
-        public async Task<PasteBinResult> deletePlaylistAsync(string playlistName)
+        public async Task<PlaylistResult> deletePlaylistAsync(string playlistName)
         {
             foreach(Paste paste in await User.ListPastesAsync(listPasteNum))
             {
@@ -48,16 +48,16 @@ namespace Roblot.Services
                     try
                     {
                         await User.DeletePasteAsync(paste);
-                        return PasteBinResult.Successful;
+                        return PlaylistResult.Successful;
                     }
                     catch (PastebinException ex)                  
                     {
                         Console.Error.WriteLine(ex.Parameter.ToString());
-                        return PasteBinResult.Failed;
+                        return PlaylistResult.Failed;
                     }
                 }
             }
-            return PasteBinResult.Failed;
+            return PlaylistResult.Failed;
   
         }
 
@@ -74,7 +74,7 @@ namespace Roblot.Services
         }
 
         // Returns an enum stating the result of saving
-        public async Task<PasteBinResult> saveTracksAsync(List<string> listOfTracks, string playlistName)
+        public async Task<PlaylistResult> saveTracksAsync(List<string> listOfTracks, string playlistName)
         {
             string playlist = String.Join('\n', listOfTracks);
             try
@@ -82,16 +82,16 @@ namespace Roblot.Services
                 Paste playlistPaste = await User.CreatePasteAsync(playlist, playlistName, null, Visibility.Unlisted, Expiration.Never);
 
                 // Check if the name already exists without checking the database (costly!)
-                return PasteBinResult.Successful;
+                return PlaylistResult.Successful;
             }
             catch (PastebinException ex)
             {
                 Console.Error.WriteLine(ex.Parameter.ToString());
-                return PasteBinResult.Failed;
+                return PlaylistResult.Failed;
             }
         }
 
-        public async Task<IEnumerable<String>> loadTracks(string playlistName)
+        public async Task<IEnumerable<String>> loadTracksAsync(string playlistName)
         {
 
             foreach(Paste paste in await User.ListPastesAsync(listPasteNum))
@@ -105,6 +105,19 @@ namespace Roblot.Services
                 }
             }
             return null;
+        }
+
+        public async Task<Dictionary<String, int>> listPlaylistsAsync()
+        {
+            Dictionary<String, int> listOfPlaylists = new Dictionary<string, int>();
+
+            foreach (Paste paste in await User.ListPastesAsync(listPasteNum))
+            {
+                // get number of lines in the text
+                String rawData = await paste.GetRawAsync();
+                listOfPlaylists.Add(paste.Title, rawData.Split('\n').Length);
+            }
+            return listOfPlaylists;
         }
 
         private async Task Client_Ready(ReadyEventArgs e)

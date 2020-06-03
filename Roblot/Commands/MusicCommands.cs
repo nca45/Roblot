@@ -18,6 +18,7 @@ using Roblot.Data;
 using Roblot.Items;
 using System.Xml;
 using PastebinAPI;
+using Roblot.Helpers;
 
 namespace Roblot
 {
@@ -213,7 +214,7 @@ namespace Roblot
         }
 
         [Command("remove")]
-        [Aliases("delete", "del", "rm")]
+        [Aliases("rm")]
         [Description("Removes a track from the playback queue")]
         public async Task RemoveTrackAsync(CommandContext ctx, [Description("Which track to remove")] int index)
         {
@@ -342,7 +343,6 @@ namespace Roblot
             else
             {
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{track.Track.Title}")} by {Formatter.Bold($"{track.Track.Author}")} - ({Time_Convert.CompressLavalinkTime(track.Track.Length)})").ConfigureAwait(false);
-
             }
         }
 
@@ -351,7 +351,7 @@ namespace Roblot
         [Command("export")]
         [Aliases("save")]
         [Description("Saves the current queue and currently playing song (if applicable) as a personal playlist")]
-        public async Task exportAsync(CommandContext ctx, [RemainingText, Description("Name of the Playlist")] string playlistName)
+        public async Task ExportAsync(CommandContext ctx, [RemainingText, Description("Name of the Playlist")] string playlistName)
         {
             var interactive = ctx.Client.GetInteractivity();
 
@@ -385,43 +385,31 @@ namespace Roblot
             // Check if playlist name already exists
             if(await PasteBin.playlistExists(playlistName))
             {
-                // If already exists, ask if we want to overwrite
-                var pollDuration = TimeSpan.FromSeconds(30);
+                string overwriteConfirm = $"{DiscordEmoji.FromName(ctx.Client, ":warning:")} There's already a playlist with the name {Formatter.Bold(playlistName)}. Would you like to overwrite it?";
+                PlaylistResult deleteResult = await MusicCommandHelpers.DeletePlaylistHelperAsync(ctx, overwriteConfirm, playlistName, PasteBin);
 
-                var overwriteConfirm = await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} There's already a playlist with the name {Formatter.Bold(playlistName)}. Would you like to overwrite it?");
-
-                // Get the answer from the user
-                var okReaction = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
-                await overwriteConfirm.CreateReactionAsync(okReaction);
-
-                var cancelReaction = DiscordEmoji.FromName(ctx.Client, ":x:");
-                await overwriteConfirm.CreateReactionAsync(cancelReaction);
-
-                var poll_result = await interactive.WaitForReactionAsync(x => x.Emoji == okReaction || x.Emoji == cancelReaction, overwriteConfirm, ctx.User, pollDuration);
-
-                // Don't do anything if user cancels or poll times out
-                if(poll_result.Result == null || poll_result.Result.Emoji == cancelReaction)
+                switch(deleteResult)
                 {
-                    await overwriteConfirm.DeleteAsync();
-                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Overwrite Cancelled");
-                    return;
-                }
+                    case PlaylistResult.Cancelled:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Overwrite cancelled");
+                        break;
 
-                // If yes, delete the old playlist
-                var deleteResult = await PasteBin.deletePlaylistAsync(playlistName);
-
-                // Error handling if deleting failed for some reason
-                if(deleteResult == PasteBinResult.Failed)
-                {
-                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem deleting the playlist");
-                    return;
+                    case PlaylistResult.Failed:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem deleting the playlist");
+                        break;
+                    case PlaylistResult.Successful:
+                        // Don't say anything if delete goes through - delete is just an intermediate step to overwriting
+                        break;
+                    default:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":REEE:")} You done goofed");
+                        break;
                 }
             }
 
             // Save the playlist
             var saveResult = await PasteBin.saveTracksAsync(trackQueue, playlistName);
 
-            if (saveResult == PasteBinResult.Successful)
+            if (saveResult == PlaylistResult.Successful)
             {
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Playlist {Formatter.Bold(playlistName)} saved!");
             }
@@ -435,9 +423,18 @@ namespace Roblot
         [Command("load")]
         [Aliases("import")]
         [Description("Imports the user's playlist that they made")]
-        public async Task importAsync(CommandContext ctx, [RemainingText, Description("Playlist name to load")] string playlistName)
+        public async Task ImportAsync(CommandContext ctx, [RemainingText, Description("Playlist name to load")] string playlistName)
         {
-            IEnumerable<String> trackStrings = await PasteBin.loadTracks(playlistName);
+            // If the user inputs no playlist name in discord
+            if(playlistName == null)
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Please specify the playlist name you want to load!");
+                return;
+            }
+
+            IEnumerable<String> trackStrings = await PasteBin.loadTracksAsync(playlistName);
+
+            // Check if there is actually a match in playlist name
             if(trackStrings != null)
             {
                 int trackCount = trackStrings.Count();
@@ -464,13 +461,81 @@ namespace Roblot
             await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Playlist name {Formatter.Bold(playlistName)} does not exist!");
         }
 
-        // TODO: A way to delete playlists!
         [Command("deletePlaylist")]
-        [Aliases("deletepl")]
+        [Aliases("deletepl", "delete")]
         [Description("Deletes a playlist")]
-        public async Task deletePlaylist(CommandContext ctx)
+        public async Task DeletePlaylist(CommandContext ctx, [RemainingText, Description("Playlist name to delete")] string playlistName)
+        {
+            var interactive = ctx.Client.GetInteractivity();
+            if(playlistName == null)
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Please specify the playlist name you want to delete!");
+                return;
+            }
+
+            if(await PasteBin.playlistExists(playlistName))
+            {
+                string deleteConfirm = $"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Are you sure you want to delete the playlist {Formatter.Bold(playlistName)}?";
+                PlaylistResult deleteResult = await MusicCommandHelpers.DeletePlaylistHelperAsync(ctx, deleteConfirm, playlistName, PasteBin);
+
+                switch(deleteResult)
+                {
+                    case PlaylistResult.Cancelled:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":warning:")} Deletion cancelled");
+                        break;
+
+                    case PlaylistResult.Failed:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There was a problem deleting the playlist");
+                        break;
+                    case PlaylistResult.Successful:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Deleted the playlist {Formatter.Bold(playlistName)}");
+                        break;
+                    default:
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":REEE:")} You done goofed");
+                        break;
+                }
+            }
+            else
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Playlist {Formatter.Bold(playlistName)} doesn't exist!");
+            }
+        }
+
+        [Command("list")]
+        [Aliases("listplaylists", "listpl")]
+        [Description("Lists all playlists currently saved and the number of tracks they have")]
+        public async Task ListPlaylists(CommandContext ctx)
+        {
+            Dictionary<String, int> listOfPlaylists = await PasteBin.listPlaylistsAsync();
+
+            if (listOfPlaylists.Count == 0)
+            {
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} There are no playlists currently saved");
+                return;
+            }
+
+            string playlistInfo = string.Join('\n', listOfPlaylists.Select(x => $"{Formatter.Bold(x.Key)} - {Formatter.Bold(x.Value.ToString())} tracks"));
+
+            var embed = new DiscordEmbedBuilder()
+            {
+                Title = "Here are the playlists I currently have saved",
+                Description = playlistInfo,
+                Color = DiscordColor.Aquamarine,
+            };
+
+            await ctx.RespondAsync(embed: embed).ConfigureAwait(false);
+        }
+
+        [Command("convert")]
+        [Description("Converts a youtube playlist URL into a Roblot queue")]
+        public async Task ConvertYoutubePlaylistAsync(CommandContext ctx, [Description("The youtube playlist url")] Uri url)
         {
             throw new NotImplementedException();
+            // Confirm that the url is a youtube playlist
+
+            // Confirm to user that they want to import the playlist with x tracks
+
+            // Add the tracks into the queue
         }
 
         [Command("about")]

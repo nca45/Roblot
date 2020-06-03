@@ -4,10 +4,12 @@ using System.Text;
 
 namespace Roblot
 {
-    public enum PasteBinResult
+    public enum PlaylistResult
     {
         Successful,
         AlreadyExists,
-        Failed
+        Failed,
+        Cancelled,
+        Empty
     }
 }

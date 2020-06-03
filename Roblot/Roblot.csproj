@@ -34,7 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Data\PasteBinEnum.cs">
+    <Compile Update="Commands\MusicCommands.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+    <Compile Update="Data\PlaylistResultEnum.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>
