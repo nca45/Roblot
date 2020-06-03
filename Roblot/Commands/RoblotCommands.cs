@@ -69,7 +69,7 @@ namespace Roblot
         }
 
         [Command("dongasm")]
-        [Description("Wowza!")]
+        [Description("Wowza")]
         public async Task Dongasm(CommandContext ctx)
         {
             string output = string.Empty;
