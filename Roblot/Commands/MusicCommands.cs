@@ -98,14 +98,16 @@ namespace Roblot
 
             await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
 
-            // TODO: For playlist support - add each tracks in a random order ACTUALLY REDUNDANT??
-            // It doesn't matter if we shuffle the playlist tracks because when we queue them they will be inserted randomly if shuffled
-
             await MusicData.Play();
 
             var track = tracks.First();
-
             await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Added {Formatter.Bold(track.Title)} by {Formatter.Bold(track.Author)} - ({Time_Convert.CompressLavalinkTime(track.Length)})");
+
+            // Acknowledge that we loaded a playlist
+            if(getTracks.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
+            {
+                await ctx.RespondAsync($"Plus an additional {Formatter.Bold((tracks.Count() - 1).ToString())} tracks from the playlist {Formatter.Bold(getTracks.PlaylistInfo.Name)}");
+            }
             //await playHandler(ctx, url.ToString());
         }
 
@@ -308,7 +310,7 @@ namespace Roblot
             // Later on we will paginate the tracks
             var queueString = String.Empty;
             var num = 1;
-
+            var interactivity = ctx.Client.GetInteractivity();
             if (MusicData.RepeatMode == "single")
             {
                 var repeatingTrack = MusicData.NowPlaying;
@@ -321,12 +323,24 @@ namespace Roblot
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":no_entry:")} Queue is currently empty!");
                 return;
             }
-            foreach (var track in MusicData.PublicQueue)
+            try
             {
-                queueString += $"{num}. {Formatter.Bold($"{track.Track.Title}")} by {Formatter.Bold($"{track.Track.Author}")} - ({Time_Convert.CompressLavalinkTime(track.Track.Length)})\n";
-                num++;
+                foreach (var track in MusicData.PublicQueue)
+                {
+                    queueString += $"{num}. {Formatter.Bold($"{track.Track.Title}")} by {Formatter.Bold($"{track.Track.Author}")} - ({Time_Convert.CompressLavalinkTime(track.Track.Length)})\n";
+                    num++;
+                }
+                Console.WriteLine(queueString);
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} List of currently queued tracks: \n");
+                var queuePages = interactivity.GeneratePagesInEmbed(queueString, SplitType.Line);
+
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, queuePages, null, PaginationBehaviour.WrapAround);
             }
-            await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} List of currently queued tracks: \n{queueString}");
+            catch(ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException);
+            }
         }
 
         [Command("nowplaying")]
@@ -524,18 +538,6 @@ namespace Roblot
             };
 
             await ctx.RespondAsync(embed: embed).ConfigureAwait(false);
-        }
-
-        [Command("convert")]
-        [Description("Converts a youtube playlist URL into a Roblot queue")]
-        public async Task ConvertYoutubePlaylistAsync(CommandContext ctx, [Description("The youtube playlist url")] Uri url)
-        {
-            throw new NotImplementedException();
-            // Confirm that the url is a youtube playlist
-
-            // Confirm to user that they want to import the playlist with x tracks
-
-            // Add the tracks into the queue
         }
 
         [Command("about")]
