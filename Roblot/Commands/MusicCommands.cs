@@ -470,16 +470,21 @@ namespace Roblot
                     {
                         MusicData.QueueTrack(new TrackItem(track, ctx.Member));
                     }
-                        await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
-                        await MusicData.Play();
-                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Loaded playlist {Formatter.Bold(playlistName)} with {Formatter.Bold(trackCount.ToString())} tracks");
 
-                        if(MusicData.NowPlaying.Track == null || MusicData.NowPlaying.Track.TrackString == null)
-                        {
-                            await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{tracks.First().Title}")} by {Formatter.Bold($"{tracks.First().Author}")} - ({Time_Convert.CompressLavalinkTime(tracks.First().Length)})").ConfigureAwait(false);
-                        }
+                    await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
 
-                        return;
+                    var trackNowPlaying = MusicData.NowPlaying;
+
+                    await MusicData.Play();
+                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Loaded playlist {Formatter.Bold(playlistName)} with {Formatter.Bold(trackCount.ToString())} tracks");
+                        
+                    // Player wasn't playing anything at the time of loading the playlist
+                    if(trackNowPlaying.Track == null || trackNowPlaying.Track.TrackString == null)
+                    {
+                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{tracks.First().Title}")} by {Formatter.Bold($"{tracks.First().Author}")} - ({Time_Convert.CompressLavalinkTime(tracks.First().Length)})").ConfigureAwait(false);
+                    }
+
+                    return;
                 }
                 catch(Exception e)
                 {
