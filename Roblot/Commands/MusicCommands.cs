@@ -27,13 +27,15 @@ namespace Roblot
         private LavalinkService Lavalink { get; }
         private MusicData MusicData { get; set; }
         private PasteBinService PasteBin { get; }
+        private YoutubeSearchEngine Youtube { get; }
 
-        public MusicCommands(MusicData music, LavalinkService lavalink, PasteBinService pastebin)
+        public MusicCommands(MusicData music, LavalinkService lavalink, PasteBinService pastebin, YoutubeSearchEngine youtube)
         {
             
             this.MusicData = music;
             this.Lavalink = lavalink;
             this.PasteBin = pastebin;
+            this.Youtube = youtube;
         }
         // Lavalink service to handle all lavalink configuration and init
         // MusicData service to handle all the options and attributes of the player (volume setting, shuffle setting, queue, now playing string)
@@ -118,20 +120,20 @@ namespace Roblot
         {
             var interactivity = ctx.Client.GetInteractivity();
 
-            var results = await Lavalink.lavaRest.GetTracksAsync(terms, LavalinkSearchType.Youtube);
-            if(results.LoadResultType == LavalinkLoadResultType.NoMatches)
+            var results = await this.Youtube.SearchAsync(terms).ConfigureAwait(false);
+            if (!results.Any())
             {
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":cry:")} I couldn't find anything with those search keys");
+                return;
             }
-            var trackResults = results.Tracks.Take(5);
 
             var pollDuration = TimeSpan.FromSeconds(30);
 
             List<DiscordEmoji> listOfSelections = new List<DiscordEmoji>() { DiscordEmoji.FromName(ctx.Client, ":one:"), DiscordEmoji.FromName(ctx.Client, ":two:"), DiscordEmoji.FromName(ctx.Client, ":three:"), DiscordEmoji.FromName(ctx.Client, ":four:"), DiscordEmoji.FromName(ctx.Client, ":five:") };
 
             // present the poll
+            var foo = string.Join("\n", results.Select((x, i) => $"Track {i + 1}: {Formatter.Bold(x.Title)} by {Formatter.Bold(x.Author)} - ({x.Duration})"));
 
-            var foo = string.Join("\n", trackResults.Select((x, i) => $"Track {i + 1}: {Formatter.Bold(x.Title)} by {Formatter.Bold(x.Author)} - ({Time_Convert.CompressLavalinkTime(x.Length)})"));
             var searchResults = await ctx.RespondAsync($"Here is what I found:\n\n{foo}");
 
             // add the options as reactions and add a cancel button
@@ -154,13 +156,25 @@ namespace Roblot
                     return;
                 }
                 int parseSelect = Int32.Parse(poll_result.Result.Emoji.Name.Substring(0, 1)) - 1;
-                var track = trackResults.ElementAt(parseSelect);
+                var url = new Uri($"https://www.youtube.com/watch?v={results.ElementAt(parseSelect).Id}");
 
-                MusicData.QueueTrack(new TrackItem(track, ctx.Member));
+                var getTracks = await this.Lavalink.lavaRest.GetTracksAsync(url).ConfigureAwait(false);
+                var tracks = getTracks.Tracks;
+
+                if (getTracks.LoadResultType == LavalinkLoadResultType.LoadFailed || !tracks.Any())
+                {
+                    await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":cry:")} I couldn't find any tracks with that url").ConfigureAwait(false);
+                    return;
+                }
+                foreach (var trackElement in tracks)
+                {
+                    MusicData.QueueTrack(new TrackItem(trackElement, ctx.Member));
+                }
 
                 await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
                 await MusicData.Play();
 
+                var track = tracks.First();
                 await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Added {Formatter.Bold(track.Title)} by {Formatter.Bold(track.Author)} - ({Time_Convert.CompressLavalinkTime(track.Length)})");
             }
             else
@@ -459,7 +473,12 @@ namespace Roblot
                         await this.MusicData.CreatePlayerAsync(ctx.Member.VoiceState.Channel).ConfigureAwait(false);
                         await MusicData.Play();
                         await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Loaded playlist {Formatter.Bold(playlistName)} with {Formatter.Bold(trackCount.ToString())} tracks");
-                        await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{tracks.First().Title}")} by {Formatter.Bold($"{tracks.First().Author}")} - ({Time_Convert.CompressLavalinkTime(tracks.First().Length)})").ConfigureAwait(false);
+
+                        if(MusicData.NowPlaying.Track == null || MusicData.NowPlaying.Track.TrackString == null)
+                        {
+                            await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Now playing: {Formatter.Bold($"{tracks.First().Title}")} by {Formatter.Bold($"{tracks.First().Author}")} - ({Time_Convert.CompressLavalinkTime(tracks.First().Length)})").ConfigureAwait(false);
+                        }
+
                         return;
                 }
                 catch(Exception e)

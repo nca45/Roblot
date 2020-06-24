@@ -18,8 +18,6 @@
 
   <ItemGroup>
     <Compile Remove="Commands\AudioCommands.cs" />
-    <Compile Remove="Data\YoutubeSearchEngine.cs" />
-    <Compile Remove="Data\YoutubeSearchResults.cs" />
   </ItemGroup>
 
   <ItemGroup>

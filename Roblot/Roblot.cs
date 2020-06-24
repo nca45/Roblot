@@ -110,6 +110,7 @@ namespace Roblot
                 .AddSingleton(new LavalinkService(this.Discord, cfg.ipAddress, cfg.port))
                 .AddSingleton(this.Discord)
                 .AddSingleton<dbConnectionService>()
+                .AddSingleton(new YoutubeSearchEngine())
                 .AddSingleton<PasteBinService>()
                 .AddSingleton<MusicData>()
                 .AddSingleton(this)
