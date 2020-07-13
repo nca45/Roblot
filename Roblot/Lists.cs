@@ -7,15 +7,15 @@ namespace Roblot
 {
     public sealed class Lists
     {
-        private string CurrentDirectory { get; }
+        private static string CurrentDirectory { get; set; }
 
         public Lists(string currentDirectory)
         {
-            this.CurrentDirectory = currentDirectory;
+            Lists.CurrentDirectory = currentDirectory;
         }
-        public string Restaurants()
+        public static string ChooseFromLines(TextFileCategory category)
         {
-            var list = File.ReadAllLines(CurrentDirectory + "/textfiles/Restaurants.txt");
+            var list = File.ReadAllLines(CurrentDirectory + $"/textfiles/{category.ToString()}.txt");
             Random rnd = new Random();
             return list[rnd.Next(list.Length)];
         }
@@ -24,5 +24,6 @@ namespace Roblot
         {
             return File.ReadAllLines(CurrentDirectory + "/textfiles/Restaurants.txt");
         }
+
     }
 }

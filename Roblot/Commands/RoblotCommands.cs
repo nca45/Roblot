@@ -93,7 +93,7 @@ namespace Roblot
         [Description("Gets a random restaurant from the list")]
         public async Task PickRestaurant(CommandContext ctx)
         {
-            await ctx.RespondAsync($"Let's go eat at {Lists.Restaurants()}.");
+            await ctx.RespondAsync($"Let's go eat at {Lists.ChooseFromLines(TextFileCategory.Restaurants)}.");
         }
 
         [Command("uwu")]

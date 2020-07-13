@@ -26,6 +26,7 @@
     <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00692" />
     <PackageReference Include="DSharpPlus.Lavalink" Version="4.0.0-nightly-00692" />
     <PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-nightly-00692" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.24" />
     <PackageReference Include="MongoDB.Driver" Version="2.11.0-beta1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Pastebin.API.CSharp" Version="1.1.0" />
@@ -36,6 +37,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
     <Compile Update="Data\PlaylistResultEnum.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
+    <Compile Update="Services\WebPageService.cs">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>

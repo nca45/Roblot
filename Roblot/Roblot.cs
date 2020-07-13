@@ -112,6 +112,7 @@ namespace Roblot
                 .AddSingleton<dbConnectionService>()
                 .AddSingleton(new YoutubeSearchEngine())
                 .AddSingleton<PasteBinService>()
+                .AddSingleton(new WebPageService(this.Discord))
                 .AddSingleton<MusicData>()
                 .AddSingleton(this)
                 .BuildServiceProvider(true);
@@ -171,7 +172,7 @@ namespace Roblot
                 await music.Pause();
                 if(music.TextChannel != null)
                 {
-                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused. Resume playback by joining the channel and using `!resume`");
+                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused. Resume playback by joining the channel and using `!play`");
                 }
             }
             // pause the player

@@ -536,7 +536,7 @@ namespace Roblot
         }
 
         [Command("list")]
-        [Aliases("listplaylists", "listpl")]
+        [Aliases("listplaylists", "listpl", "playlists", "playlist")]
         [Description("Lists all playlists currently saved and the number of tracks they have")]
         public async Task ListPlaylists(CommandContext ctx)
         {
@@ -557,7 +557,7 @@ namespace Roblot
 
             try
             {
-                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Here is the list of playlists currently saved: \n");
+                await ctx.RespondAsync($"{DiscordEmoji.FromName(ctx.Client, ":musical_note:")} Here is the list of playlists currently saved: \nUse {Formatter.InlineCode("!save <playlist>")} to save the current queue and {Formatter.InlineCode("!load <playlist>")} to load a saved playlist. \n\n");
                 var queuePages = interactivity.GeneratePagesInEmbed(playlistInfo, SplitType.Line);
 
                 await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, queuePages, null, PaginationBehaviour.WrapAround);
