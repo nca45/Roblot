@@ -23,7 +23,12 @@ namespace Roblot.Services
         {
             // Looks for messages that start with https:// or www.
             linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            htmlGetTitle = new HtmlWeb();
+            htmlGetTitle = new HtmlWeb
+            {
+                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+                AutoDetectEncoding = true
+
+            };
             client.MessageCreated += Message_Created;
             Console.WriteLine("WebPageService Ready!");
         }
@@ -43,10 +48,12 @@ namespace Roblot.Services
 
             foreach (Match match in matches)
             {
+                Console.WriteLine($"Found webpage: {match.Value}");
                 // If the site is valid and selling a monitor
                 if (await CheckSiteMonitorValid(match.Value))
                 {
                     //Send a quote
+                    Console.WriteLine("Monitor match is valid");
                     await arg.Channel.SendMessageAsync(Lists.ChooseFromLines(TextFileCategory.quotes));
                 }
             }
@@ -63,11 +70,13 @@ namespace Roblot.Services
                 {
                     return true;
                 }
+                Console.WriteLine("Monitor match not valid");
                 return false;
             }
 
-            catch
+            catch(Exception e)
             {
+                Console.WriteLine($"Caught an error {e.InnerException}");
                 return false;
             }
         }
