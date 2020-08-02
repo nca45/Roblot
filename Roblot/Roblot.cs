@@ -185,11 +185,12 @@ namespace Roblot
             // get the voice channel the bot is in
             var vchannel = music.VoiceChannel;
 
-            // Do nothing if bot is not connected or a user disconnects/connects from a voice channel different from Roblot BUT doesn't disconnect from voice entirely
-            if(vchannel == null || (vchannel != e.After.Channel && e.After.Channel != null))
+            // Do nothing if bot is not connected, OR a user moves/joins a different channel the bot is not on from a channel the bot is not on, OR the user disconnects from a different channel than the bot
+            if(vchannel == null || (e.After.Channel != vchannel && e.After.Channel != null && e.Before.Channel != vchannel) || (e.After.Channel == null && e.Before.Channel != vchannel))
             {
                 return;
             }
+
             var users = vchannel.Users;
 
             // The disconnect timer was started but someone joined the channel
