@@ -7,6 +7,7 @@ namespace Roblot
     public enum TextFileCategory
     {
         Restaurants,
-        quotes
+        quotes,
+        retorts
     };
 }

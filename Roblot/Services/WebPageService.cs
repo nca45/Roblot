@@ -8,6 +8,7 @@ using System.IO;
 using System.Net.Http;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
 using HtmlAgilityPack;
 
 namespace Roblot.Services
@@ -18,6 +19,8 @@ namespace Roblot.Services
         private HtmlWeb htmlGetTitle { get; }
         private string[] monitorConditions = new string[] { "IPS", "TN", "VA", "Monitor", "Gaming Monitor" };
         private Lists listClass { get; }
+        //private Task waitForMessageThread { get; set; }
+        private DiscordClient dClient { get; set; }
 
         public WebPageService(DiscordClient client)
         {
@@ -29,7 +32,8 @@ namespace Roblot.Services
                 AutoDetectEncoding = true
 
             };
-            client.MessageCreated += Message_Created;
+            this.dClient = client;
+            dClient.MessageCreated += Message_Created;
             Console.WriteLine("WebPageService Ready!");
         }
 
@@ -43,6 +47,7 @@ namespace Roblot.Services
                 return;
             }
 
+
             // Gets the number of webpages that we found in the message
             var matches = linkParser.Matches(arg.Message.Content);
 
@@ -55,10 +60,29 @@ namespace Roblot.Services
                     //Send a quote
                     Console.WriteLine("Monitor match is valid");
                     await arg.Channel.SendMessageAsync(Lists.ChooseFromLines(TextFileCategory.quotes));
+
+                    Console.WriteLine("now sending to task.run...");
+                    var waitForMessageThread = Task.Run(() => WaitForMessage(arg));
+                    if(Task.CompletedTask.IsCompletedSuccessfully)
+                    {
+                        Console.WriteLine("Task.Run is completed!");
+                        return;
+                    }
                 }
             }
         }
 
+        private async Task WaitForMessage(MessageCreateEventArgs arg)
+        {
+            await Task.CompletedTask;
+            var interactivity = dClient.GetInteractivity();
+            var result = await interactivity.WaitForMessageAsync(xm => xm.Content.ToLower().Contains("roblot"), TimeSpan.FromSeconds(30));
+            if(result.Result != null)
+            {
+                await dClient.SendMessageAsync(arg.Channel, Lists.ChooseFromLines(TextFileCategory.retorts));
+            }
+            return;
+        }
         private async Task<bool> CheckSiteMonitorValid(string url)
         {
             try

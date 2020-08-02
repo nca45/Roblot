@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using DSharpPlus;
@@ -56,6 +57,10 @@ namespace Roblot
         public Dictionary<string, Cooldown> AudioCategories { get; set; }
 
         /// <summary>
+        /// Gets the configuration of the discord client
+        /// </summary>
+        public ConfigJson configuration { get; set; }
+        /// <summary>
         /// Gets the MongoDB client instance for moneytracking and others (Maybe we can put this in its own class)
         /// </summary>
        // public MongoClient Client { get; set; } = null;
@@ -69,12 +74,17 @@ namespace Roblot
 
         private MusicData music;
 
+        private Timer disconnectTimer;
+
+        private Task GameStatusThread;
+
         /// <summary>
         /// Create new instance of Roblot bot
         /// </summary>
         /// <param name="cfg"> The configuration json file </param>
         public Roblot(ConfigJson cfg)
         {
+            configuration = cfg;
             this.Discord = new DiscordClient(new DiscordConfiguration
             {
                 Token = cfg.Token,
@@ -82,24 +92,7 @@ namespace Roblot
                 LogLevel = LogLevel.Debug,
                 UseInternalLogHandler = true
             });
-            this.Discord.Ready += async x =>
-            {
-                AudioCategories = new Dictionary<string, Cooldown>()
-                {
-                    {"frank", new Cooldown()},
-                    {"stop", new Cooldown()},
-                    {"yeahboi", new Cooldown{cooldownTime = 60 }},
-                    {"pranked", new Cooldown()},
-                    {"wow", new Cooldown{cooldownTime = 1}}
-                };
-
-
-                DiscordActivity botstatus = new DiscordActivity("you sleep | !help", ActivityType.Watching);
-                music = Services.GetService<MusicData>();
-                await music.SetVolume(50);
-                await this.Discord.UpdateStatusAsync(botstatus);
-                return;
-            };
+            this.Discord.Ready += Discord_Ready;
 
             this.Discord.VoiceStateUpdated += VoiceState_Updated;
 
@@ -139,6 +132,38 @@ namespace Roblot
             this.Voice = Discord.UseVoiceNext();
         }
 
+        private async Task Discord_Ready(ReadyEventArgs e)
+        {
+            music = Services.GetService<MusicData>();
+            await music.SetVolume(50);
+            GameStatusThread = Task.Run(SetGameStatus);          
+        }
+
+        private async Task SetGameStatus()
+        {
+            await Task.CompletedTask;
+            var status = configuration.games;
+            int index = 0;
+
+            // Update the status indefinitely
+            while(true)
+            {
+                if(index >= status.Length)
+                {
+                    index = 0;
+                }
+
+                DiscordActivity updateActivity = new DiscordActivity
+                {
+                    Name = status[index],
+                    ActivityType = ActivityType.Watching
+                };
+                await Discord.UpdateStatusAsync(updateActivity);
+                await Task.Delay(TimeSpan.FromMinutes(5));
+                index++;
+            }
+        }
+
         private async Task GuildMember_Added(GuildMemberAddEventArgs e)
         {
             //Console.WriteLine($"{e.Member.Username} joined");
@@ -160,19 +185,38 @@ namespace Roblot
             // get the voice channel the bot is in
             var vchannel = music.VoiceChannel;
 
-            // Do nothing if bot is not connected or a user disconnects/connects from a voice channel different from Roblot
-            if(vchannel == null || vchannel != e.Before.Channel)
+            // Do nothing if bot is not connected or a user disconnects/connects from a voice channel different from Roblot BUT doesn't disconnect from voice entirely
+            if(vchannel == null || (vchannel != e.After.Channel && e.After.Channel != null))
             {
                 return;
             }
             var users = vchannel.Users;
-            // if it is playing and it is the only one left in the channel
-            if(music.IsPlaying && (users.Count() == 1 && users.First().Id == this.Discord.CurrentUser.Id))
+
+            // The disconnect timer was started but someone joined the channel
+            if(users.Count() > 1 && disconnectTimer != null)
             {
-                await music.Pause();
+                // Reset the timer
+                Console.WriteLine("Timer was going but someone joined - stopping the timer!");
+                disconnectTimer.Dispose();
+                disconnectTimer = null;
+            }
+
+            // if it is playing and it is the only one left in the channel
+            if((users.Count() == 1 && users.First().Id == this.Discord.CurrentUser.Id))
+            {
+                if(music.IsPlaying)
+                {
+                    await music.Pause();
+                }
+
                 if(music.TextChannel != null)
                 {
-                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused. Resume playback by joining the channel and using `!play`");
+                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused. Resume playback by joining the channel and using `!play`. Disconnecting in 5 minutes");
+                    if(this.disconnectTimer == null)
+                    {
+                        Console.WriteLine("Setting up auto leave - starting the timer");
+                        disconnectTimer = new Timer(this.DisconnectTimerCallback, e.Client, (int)TimeSpan.FromMinutes(5).TotalMilliseconds, Timeout.Infinite);
+                    }
                 }
             }
             // pause the player
@@ -180,6 +224,31 @@ namespace Roblot
         public Task StartAsync()
         {
             return this.Discord.ConnectAsync();
+        }
+
+        private async void DisconnectTimerCallback(object obj)
+        {
+            var client = obj as DiscordClient;
+            try
+            {
+                Console.WriteLine("Automatically Disconnecting");
+                var music = Services.GetService<MusicData>();
+
+                music.EmptyQueue();
+                await music.Stop();
+                await music.DestroyPlayerAsync().ConfigureAwait(false);
+                await client.SendMessageAsync(music.TextChannel, $"{DiscordEmoji.FromName(this.Discord, ":warning:")} No users detected - Disconnecting.");
+
+                disconnectTimer.Dispose();
+                disconnectTimer = null;
+
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"ERROR: Could not auto disconnect ({ex.GetType()}: {ex.Message})");
+                disconnectTimer.Dispose();
+                disconnectTimer = null;
+            }
         }
     }
     // this structure will hold data from config.json
@@ -196,5 +265,8 @@ namespace Roblot
 
         [JsonProperty("port")]
         public string port { get; private set; }
+
+        [JsonProperty("game")]
+        public string[] games { get; private set; }
     }
 }
