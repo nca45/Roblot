@@ -212,7 +212,7 @@ namespace Roblot
 
                 if(music.TextChannel != null)
                 {
-                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused. Resume playback by joining the channel and using `!play`. Disconnecting in 5 minutes");
+                    await music.TextChannel.SendMessageAsync($"{DiscordEmoji.FromName(this.Discord, ":warning:")} All members have left the voice channel - Playback paused.\nResume playback by joining the channel and using `!play`.\nAuto-Disconnecting in 5 minutes");
                     if(this.disconnectTimer == null)
                     {
                         Console.WriteLine("Setting up auto leave - starting the timer");
@@ -239,7 +239,6 @@ namespace Roblot
                 await music.Stop();
                 await music.DestroyPlayerAsync().ConfigureAwait(false);
                 await client.SendMessageAsync(music.TextChannel, $"{DiscordEmoji.FromName(this.Discord, ":warning:")} No users detected - Disconnecting.");
-
                 disconnectTimer.Dispose();
                 disconnectTimer = null;
 
