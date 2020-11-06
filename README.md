@@ -19,6 +19,7 @@ This project is updated as needed and is written using the DSharpPlus API and C#
 * Voice recognition?
 * Some Minecraft stuff?
 * Remove money tracker because we don't do that anymore?
+* Extend the stock checker to be more modular + control from discord commands
 
 # Documentation
 
