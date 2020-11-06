@@ -85,7 +85,7 @@ Saves the current queue and currently playing song (if applicable) as a personal
 
 Imports the user's playlist that they made.
 
-### `!deleteplaylist <playlist name`
+### `!deleteplaylist <playlist name>`
 
 Deletes a playlist
 
