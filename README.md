@@ -1,26 +1,102 @@
-# JawlaBot
+# Roblot
 
-A discord bot created for my friend's discord channel. Features of this bot include funny memes and some actual useful functionality. 
+A discord bot created for my private discord channel. Mostly a music streaming bot with some additional assistant functions
 
-This project is currently in progress and is written using the DSharpPlus API and C#.
+This project is updated as needed and is written using the DSharpPlus API and C#.
 
 ## Features
 
 * Joining and leaving the voice channel
-* Broadcasting audio through the voice channel
-* Yeahboi: Ask the bot to show you it's longest 'yeah boy' ever
-* Cooldown system to reduce command spam
-* IOwe/OweMe: Keep track of who owes money to whom 
-* Meme generator
+* Stream youtube audio through the voice channel
+* Shuffle, skip, and adjust volume of the music tracks
+* Automatically disconnects from voice channel if no users detected
+* Save and load custom music playlists
+* IOwe/OweMe: Keep track of who owes money to whom (pending rewrite)
+* (New!) Checks retail stores for Zen 3 stock because I'm tired of refreshing each store's page
 
 ## Features Planned
 
-* Stream music from youtube with playlist saving
-* Grab text body from top posts of subreddits
+* Voice recognition?
+* Some Minecraft stuff?
+* Remove money tracker because we don't do that anymore?
+* Extend the stock checker to work with any computer product from the 3 websites + control from discord commands
 
 # Documentation
 
 The bot uses the `!` command prefix.
+
+## Music Commands
+
+### `!about`
+
+Gets the info about the player (shuffle, repeat, volume, current track).
+
+### `!volume`
+
+Sets the volume of the player (Default = 50%).
+
+### `!shuffle`, `!reshuffle`
+
+Toggles shuffle of the current queue. Tracks added to the queue while shuffled will be added at a random index.
+Use `!reshuffle` to reshuffle the queue.
+
+### `!repeat <mode>`
+
+Sets the repeat mode of the player
+
+`<mode>` can be `All`, `Single`, or `None`.
+
+### `!play <optional url/search terms>`
+
+If a valid url is provided, play the url.
+
+Otherwise, searches youtube for the given terms for playback.
+
+If player is currently paused/stopped, `!play` will resume playback.
+
+### `!pause`
+
+Pauses the player.
+
+### `!stop`
+
+Stops the player and resets song to the beginning.
+
+### `!skip`
+
+Skips the current track.
+
+### `!nowplaying`
+
+Gets info about the current track.
+
+### `!queue`
+
+Shows the current playback queue.
+
+### `!remove <index>`
+
+Removes a track from the playback queue at `<index>`.
+
+### `!export <playlist name>`
+
+Saves the current queue and currently playing song (if applicable) as a personal playlist.
+
+### `!load <playlist name>`
+
+Imports the user's playlist that they made.
+
+### `!deleteplaylist <playlist name>`
+
+Deletes a playlist
+
+### `!list`
+
+Lists all playlists currently saved and the number of tracks they have.
+
+### `!disconnect`
+
+Empties the queue and disconnects the bot from the channel.
 
 ## Iowe/oweMe: 'Yo can you spot me some cash?'
 
@@ -52,7 +128,7 @@ You can also substitute `<amount>` for the word `full`, which will pay the amoun
 
 This command will only work if the user `<name>` is online.
 
-## Jawla Functions: As proprietary as things come.
+## Other Functions: As proprietary as things come.
 
 Some functions are on cooldown system to avoid comment spam. Because I know there will be comment spam.
 
@@ -67,36 +143,4 @@ Gets a list of restaurants the bot currently has recorded.
 ### `!pickrestaurant`, `!eats`, `!pickfood`, `!dinner`, `!imhungry`
 
 Picks a random place to eat in case Chris Chow is planning an event.
-
-### `!yeahboi` - YOU MUST BE IN A VOICE CHANNEL
-
-Ask the bot to show you its longest yeah boy ever. 
-
-### `!stop`, `!timetostop`, `!frankstop`, `!itstimetostop`, `!notokay` - YOU MUST BE IN A VOICE CHANNEL
-
-Ask the bot to let your friends know that this is not okay, and this needs to stop. Now.
-
-### `!pranked`, `!frankprank`, `!prank`, `!gotem` - YOU MUST BE IN A VOICE CHANNEL
-
-Ask the bot to let your friends know that they just got pranked.
-
-### `!frank`, `!filthyfrank`, `!idubbbz` - YOU MUST BE IN A VOICE CHANNEL
-
-Just some random Filthy Frank + Idubbbz audio bites.
-
-### `!setcooldown <seconds>`, `!cooldown <seconds>`
-
-Sets the cooldown of the voice memes in seconds. You must be an admin to change this setting.
-
-Maximum time is 600 seconds, or 10 minutes.
-
-### `!memes<(optional) copypasta>`, `!copypasta <(optional) copypasta>`
-
-Displays a random copypasta meme. If you do not add an argument after `!memes/!copypasta` the bot will pick a random meme for you.
-
-Current copypasta meme arguments are:
-
-`Despactio`
-`RickandMorty`
-`Fortnite`
 
