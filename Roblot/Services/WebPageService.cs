@@ -13,6 +13,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using HtmlAgilityPack;
 
+
 namespace Roblot.Services
 {
     public sealed class WebPageService
@@ -41,7 +42,7 @@ namespace Roblot.Services
 
             // Have it work right away for testing
             Console.WriteLine("Starting web scraping timer...");
-            scrapeWebsiteTimer = new Timer(CheckWebsitesCallback, client, 0, (int)TimeSpan.FromMinutes(30).TotalMilliseconds);
+            scrapeWebsiteTimer = new Timer(CheckWebsitesCallback, client, 0, (int)TimeSpan.FromHours(2).TotalMilliseconds);
         }
 
         private async Task Message_Created(MessageCreateEventArgs arg)
@@ -131,7 +132,7 @@ namespace Roblot.Services
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"ERROR: Something went wrong with the scraping timer ({ex.GetType()}: {ex.Message})");
+                Helpers.Logger.Log(ex.ToString());
             }
         }
 
@@ -146,7 +147,7 @@ namespace Roblot.Services
                 var builder = new DiscordEmbedBuilder
                 {
                     Color = DiscordColor.Red,
-                    Title = $"The {productName} is back in stock!",
+                    Title = $"The {productName} is in stock",
                     ThumbnailUrl = productImg
                 };
 
